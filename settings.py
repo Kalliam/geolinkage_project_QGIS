@@ -1,5 +1,5 @@
 {
-    
+    ## este campo va para la interfaz de usuario
     "DEFAULT MAP NAMES": {
         "LINKAGE FINAL MAP": "linkage_final_new",
         "RIVER SEGMENTS MAP": "arc_segments",
@@ -7,6 +7,7 @@
         "LINKAGE INTER DEMAND SITE MAP": "output_inter_linkage_demand_sites"
     },
 
+    ## ver que hacer con este
     "GEO": {
           "NODE_COL": {
               "name": "Name",
@@ -46,7 +47,7 @@
         }
     },
 
-
+    ## este campo va para la interfaz de usuario
     "FIELDS IN INPUT MAP": {
         "catchment_map": {
             "name":  "Catchment",
@@ -75,6 +76,7 @@
         }
     },
 
+    ## ver que hacer con este
     "FIELDS IN OUTPUT FILE": {
         "catchment": "CATCHMENT",
         "groundwater": "GROUNDWAT",
@@ -86,6 +88,7 @@
         "landuse": "LANDUSE"
     },
 
+    ## este campo reemplaza por length o area dependiendo del tipo de feature, creo que se puede eliminar
     "CELL OVERLAP CRITERIA": {
         "catchment": "area",
         "groundwater": "area",
@@ -93,6 +96,7 @@
         "river": "length"
     },
 
+    # mover como diccionario dentro del postprocessor que lo use?
     "COLUMNS FOR FEATURE": {
         "catchment": 1,
         "groundwater": 1,
@@ -100,6 +104,7 @@
         "river": 1
     },
 
+    # mensajes de la consola, puedo implementarlos en la ejecucion de QGIS?
     "PROCESSING LINES": {
             "import_maps": "Importando archivo [{map_path}] con nombre [{output_name}]",
             "set_origin_in_map": "Definiendo origen del mapa [{map_name}] a: x_ll=[{x_ll}], y_ll=[{y_ll}], z_rot=[{z_rot}]",
@@ -126,6 +131,7 @@
             "perform_check_cell": "Llevando a cabo chequeos sobre celdas" 
     },
 
+    ## dejar en settings o pasar a cada postprocessor que lo use?
     "FEATURE NAMES": {
         "groundwater": "groundwater",
         "catchment": "catchment",
@@ -134,125 +140,69 @@
         "geometry": "geo",
         "main program": "main",
         "geometry checker": "geo_check"
-    },
-
-    "COMMAND INTERFACE": {
-      "UI OPTIONS": {
-            "g": {
-            "cmd": "-g",
-            "help": "Get the input grid shapefile by FloPy",
-            "shortcut": "-g",
-            "cmd_type": "flag"
-            },
-            "c": {
-                "cmd": "-c",
-                "help": "Execute checks over the linkage result.",
-                "shortcut": "-c",
-                "cmd_type": "flag"
-            },
-            "epsg_code": {
-                "cmd": "--epsg_code",
-                "help": "EPSG Projection Code (example: 32719)",
-                "shortcut": "-e",
-                "cmd_type": "key"
-            },
-            "linkage_in_folder": {
-                "cmd": "--linkage_in_folder",
-                "help": "folder to save input grid generated from goundwater model",
-                "shortcut": "-i",
-                "cmd_type": "key"
-            },
-            "gw_model": {
-                "cmd": "--gw_model",
-                "help": "path of MODFLOW(2005) model file (.mfl or .nam usually)",
-                "shortcut": "-m",
-                "cmd_type": "key"
-            },
-            "coords_ll": {
-                "cmd": "--coords_ll",
-                "help": "real word coordinates for lower left corner",
-                "shortcut": "-l",
-                "cmd_type": "key"
-            },
-            "zrotation": {
-                "cmd": "--zrotation",
-                "help": "growndwater model rotation around z axis in degrees (counter-clockwise)",
-                "shortcut": "-z",
-                "cmd_type": "key"
-            },
-
-            "linkage_in": {
-                "cmd": "--linkage_in",
-                "help": "path of input grid shapefile",
-                "shortcut": "-I",
-                "cmd_type": "key"
-            },
-            "linkage_out_folder": {
-                "cmd": "--linkage_out_folder",
-                "help": "folder to save final linkage shapefile",
-                "shortcut": "-O",
-                "cmd_type": "key"
-            },
-            "node": {
-                "cmd": "--node",
-                "help": "path of node shapefile",
-                "shortcut": "-N",
-                "cmd_type": "key"
-            },
-            "arc": {
-                "cmd": "--arc",
-                "help": "path of arc shapefile",
-                "shortcut": "-A",
-                "cmd_type": "key"
-            },
-            "catchment": {
-                "cmd": "--catchment",
-                "help": "path of catchment shapefile",
-                "shortcut": "-C",
-                "cmd_type": "key"
-            },
-            "gw": {
-                "cmd": "--gw",
-                "help": "path of groundwater shapefile",
-                "shortcut": "-w",
-                "cmd_type": "key"
-            },
-            "ds_folder": {
-                "cmd": "--ds_folder",
-                "help": "folder of demand site shapefile(s) and wells textfile (.txt)",
-                "shortcut": "-d",
-                "cmd_type": "key"
-            },
-            "geo_check_folder": {
-                "cmd": "--geo_check_folder",
-                "help": "folder to save geometry check results",
-                "shortcut": "-G",
-                "cmd_type": "key"
-            },
-            "catchment_field": {
-                "cmd": "--catchment_field",
-                "help": "field name in catchment map (default: Catchment)",
-                "shortcut": "-t",
-                "cmd_type": "key"
-            },
-            "gw_field": {
-                "cmd": "--gw_field",
-                "help": "field name in groundwater map (default: GW)",
-                "shortcut": "-a",
-                "cmd_type": "key"
-            },
-            "ds_field": {
-                "cmd": "--ds_field",
-                "help": "field name in demand site(s) map(s) (default: DS)",
-                "shortcut": "-s",
-                "cmd_type": "key"
-            }
-      },
-
-      "tool_description": "Herramienta que genera un archivo de acople (shapefile) entre un modelo hidrológico en WEAP y un modelo hidrogeológico de MODFLOW 2005",
-      "gisdb": "/tmp",
-      "mapset": "PERMANENT",
-      "location_prefix": "loc_"
-
     }
+}
+
+
+
+# Archivo que reemplazaria al config.json
+
+NODE_COL = {
+    "name": "Name",
+    "type_id": "TypeID",
+    "obj_id": "ObjID",
+    "cat": "cat"
+}
+
+ARC_COL = {
+    "name": "Name",
+    "type_id": "TypeID",
+    "type_name": "TypeName",
+    "obj_id": "ObjID",
+    "cat": "cat",
+    "src_obj_id": "SrcObjID",
+    "dest_obj_id": "DestObjID"
+}
+
+
+# Diccionario de identificadores de WEAP
+NODE_TYPE_ID = {
+    "demand_site": 1,
+    "groundwater": 3,
+    "reservoir": 4,
+    "river_withdrawal": 10,
+    "diversion_outflow": 11,
+    "tributary_inflow": 13,
+    "return_flow_node": 17,
+    "catchment": 21,
+    "catchment_inflow_node": 23
+}
+
+ARC_TYPE_ID = {
+    "river": 6,
+    "transmission_link": 7,
+    "return_flow": 8,
+    "canal": 15,
+    "runoff_infiltration": 22
+}
+
+
+# Nombres obligatorios (máx 10 caracteres) para el DBF de salida
+OUTPUT_FIELDS = {
+    "catchment": "CATCHMENT",
+    "groundwater": "GROUNDWAT",
+    "demand_site": "DEMAND",
+    "river": "RIVERREAC",
+    "row": "row",
+    "col": "column",
+    "rc": "MF_RC",
+    "landuse": "LANDUSE"
+}
+
+# Límite de columnas generadas por tipo de feature
+FEATURE_COLUMN_LIMIT = {
+    "catchment": 1,
+    "groundwater": 1,
+    "demand_site": 4,
+    "river": 1
 }
