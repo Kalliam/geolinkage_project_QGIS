@@ -1,13 +1,16 @@
 import time
 from collections import namedtuple
 
-from grass.pygrass.vector import VectorTopo
+from qgis.core import QgsFeature, QgsVectorLayer
 
-from utils.Config import ConfigApp
 from utils.Errors import ErrorManager
 from processors.FeatureProcessor import FeatureProcess
 from processors.GeoKernel import GeoKernel
 from utils.Utils import TimerSummary
+
+### borre el config app, ya no se usa
+### hay que cambiar los feature que usa grass
+### Cambiar el VectorTopo por QgsFeature
 
 
 class CatchmentProcess(FeatureProcess):
@@ -185,13 +188,11 @@ class CatchmentProcess(FeatureProcess):
 
     # @main_task
     def make_cell_data_by_main_map(self, map_name, inter_map_name, inter_map_geo_type):
-        inter_map = VectorTopo(inter_map_name)
-        inter_map.open('r')
+        inter_map = QgsVectorLayer(inter_map_name, "inter_map", "ogr")
+        if not inter_map.isValid():
+            raise RuntimeError('[EXIT] ERROR AL INTERSECTAR CON [{}]'.format(inter_map_name))
 
-        for feature_data in inter_map.viter(vtype=inter_map_geo_type):
-            if feature_data.cat is None:  # when topology has some errors
-                # print("[ERROR] ", a.cat, a.id)
-                continue
+        for feature_data in inter_map.getFeatures():
 
             Cell = namedtuple('Cell_catchment', ['row', 'col'])
 
@@ -201,10 +202,10 @@ class CatchmentProcess(FeatureProcess):
             col_field = 'b_' + self.config.fields_db['linkage']['col_in']
             row_field = 'b_' + self.config.fields_db['linkage']['row_in']
 
-            feature_name = feature_data.attrs[field_feature_name]
-            cell_area_id = feature_data.attrs['b_cat']  # id from cell in linkage map
-            area_row, area_col = feature_data.attrs[row_field], feature_data.attrs[col_field]
-            feature_area = feature_data.area()
+            feature_name = feature_data[field_feature_name]
+            cell_area_id = feature_data['b_cat']  # id from cell in linkage map
+            area_row, area_col = feature_data[row_field], feature_data[col_field]
+            feature_area = feature_data.geometry().area()
 
             data = {
                 'area': feature_area,
@@ -218,8 +219,6 @@ class CatchmentProcess(FeatureProcess):
             self._set_cell(cell, feature_name, data, by_field=self.get_order_criteria_name()) if cell else None
 
             self.cells_by_map[map_name].append(cell) if cell else None  # order cells by map name (be used in DS)
-
-        inter_map.close()
 
         self.summary.set_process_line(msg_name='make_cell_data_by_main_map', check_error=self.check_errors(types=[self.get_feature_type()]),
                                       map_name=map_name, inter_map_name=inter_map_name,

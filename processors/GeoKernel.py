@@ -1,7 +1,6 @@
-from grass.pygrass.vector.geometry import Point
-
-from utils.Utils import GrassCoreAPI, TimerSummary, UtilMisc
-from utils.Config import ConfigApp
+from qgis.core import QgsPointXY
+from utils.Utils import Utils, TimerSummary, UtilMisc
+from settings import *
 from utils.Errors import ErrorManager
 from utils.Protocols import MapFileManagerProtocol
 from utils.SummaryInfo import SummaryInfo
@@ -266,7 +265,7 @@ class GeoKernel(MapFileManagerProtocol):
                 break_node = self.river_break_nodes[break_node_id]
 
                 if break_node['node_name']:
-                    point_node = Point(break_node['x'], break_node['y'])
+                    point_node = QgsPointXY(break_node['x'], break_node['y']) 
                     arc_name = river_arc.attrs['Name']
                     arc_id = river_arc.attrs['ObjID']
 
@@ -653,10 +652,12 @@ class GeoKernel(MapFileManagerProtocol):
                                       arcmap=arcmap, nodemap=nodemap)
 
         return self.check_errors(types=[self.get_feature_type()]), self.get_errors()
-
+    
+    ## toda esta funcion es un check de un vector map, no se usaria en QGIS porque ya se hace en la clase Utils
     def check_basic_columns(self, map_name: str):
         _err, _errors = False, []
-        code_error = ConfigApp.error_codes['geo_basic_column']  # code error for geo basic column
+        #################### CAMBIO
+        code_error = ERROR_CODES['geo_basic_column']  # code error for geo basic column
 
         if self.is_arc_map(map_name=map_name):
             fields = self.get_needed_field_names(alias=self.get_feature_type(), is_arc=True)
@@ -666,8 +667,8 @@ class GeoKernel(MapFileManagerProtocol):
         for field_key in [field for field in fields if fields[field]]:
             field_name = fields[field_key]['name']
             needed = fields[field_key]['needed']
-
-            __err, __errors = GrassCoreAPI.check_basic_columns(map_name=map_name, columns=[field_name], needed=[needed])
+            #################### CAMBIO
+            __err, __errors = Utils.check_basic_columns(vector_layer=map_name, columns=[field_name], needed=[needed])
 
             self.summary.set_process_line(msg_name='check_basic_columns', check_error=__err,
                                           map_name=map_name, columns=field_name)

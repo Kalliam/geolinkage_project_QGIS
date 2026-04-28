@@ -17,7 +17,7 @@ from utils.Config import ConfigApp
 from utils.RiverNode import RiverNode
 
 
-class GrassCoreAPI:
+class Utils:
     """
     Utility class that is responsible for establishing a connection with GRASS Platform.
     Use the 'Module' API class (grass.pygrass.modules.Module) to connect with the GRASS tools.
@@ -256,30 +256,20 @@ class GrassCoreAPI:
         return col_keys, col_values
 
     @classmethod
-    def check_basic_columns(cls, map_name, columns: list, needed: list):
+    ## lo mejor seria usar las clases de qgis.core para no depender de pygrass
+    ## toda esta funcion es un check de un vector map, no se usaria en QGIS
+    def check_basic_columns(cls, vector_layer, columns: list, needed: list):
         _err, _errors = False, []
-
-        vector_map = VectorTopo(map_name)
-        vector_map.open('r')
-
-        db_path = vector_map.dblinks[0].database
-        cols_sqlite = Columns(vector_map.name, sqlite3.connect(db_path))
-        cols_in = cols_sqlite.items()
-
-        cols = [c[0] for c in cols_in]
+        nombres_columnas = [field.name() for field in vector_layer.fields()]
         for ind, c_check in enumerate(columns):
-            if c_check not in cols and needed[ind]:
+            if c_check not in nombres_columnas and needed[ind]:
                 _err = True
-                msg_error = 'El mapa [{}] no tiene la columna necesaria: [{}].'.format(map_name, c_check)
+                msg_error = 'El mapa [{}] no tiene la columna necesaria: [{}].'.format(vector_layer, c_check)
                 _errors.append(msg_error)
-            elif c_check not in cols and not needed[ind]:
+            elif c_check not in nombres_columnas and not needed[ind]:
                 _err = True
-                msg_warn = 'El mapa [{}] no tiene la columna [{}] (se ingorará su valor durante el proceso)'.format(
-                    map_name, c_check)
+                msg_warn = 'El mapa [{}] no tiene la columna [{}] (se ingorará su valor durante el proceso)'.format(vector_layer, c_check)
                 _errors.append(msg_warn)
-
-        vector_map.close()
-
         return _err, _errors
 
     @classmethod

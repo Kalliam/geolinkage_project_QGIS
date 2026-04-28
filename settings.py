@@ -206,3 +206,17 @@ FEATURE_COLUMN_LIMIT = {
     "demand_site": 4,
     "river": 1
 }
+
+# -[first letter of error]-[main][catchment][gw][river][ds][geo][check][error]
+ERROR_CODES = {
+    'node_file': 'G-0000101',
+    'arc_file': 'G-0000102',
+    'geo_basic_column': 'G-0000103',
+    'not_found_file': 'G-0000104',
+    'linkage_in_file': 'M-1000001',
+    'linkage_out_file': 'M-1000002',
+    'check_results_folder': 'C-0000011',
+    'feature_file': 'F-0111101',
+    'well_file': 'F-0000101',
+    'ds_folder': 'F-0000102'
+}
