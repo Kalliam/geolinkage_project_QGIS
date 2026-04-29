@@ -211,45 +211,46 @@ class FeatureProcess(MapFileManagerProtocol, metaclass=ABCMeta):
 
             vector_map.close()
 
-    # @main_task
-    def check_names_with_geo(self):
-        self.set_data_from_geo()  # get the feature names in geo maps (node and arc)
+    ## trasladadas para el main.py del plugin de QGIS
+    # # @main_task
+    # def check_names_with_geo(self):
+    #     self.set_data_from_geo()  # get the feature names in geo maps (node and arc)
 
-        if len(self._features_by_map) == 0:
-            self.set_feature_names_in_maps(imported=True)
+    #     if len(self._features_by_map) == 0:
+    #         self.set_feature_names_in_maps(imported=True)
 
-        for feature_name in self._features_by_map.keys():
-            feature_id = self.get_feature_id_by_name(feature_name)  # find [feature_name] in geo features
-            map_names = ', '.join(self._features_by_map[feature_name])
+    #     for feature_name in self._features_by_map.keys():
+    #         feature_id = self.get_feature_id_by_name(feature_name)  # find [feature_name] in geo features
+    #         map_names = ', '.join(self._features_by_map[feature_name])
 
-            if not feature_id:  # not exists in geometries (arcs and nodes)
-                msg_error = 'El nombre [{}] en los mapas [{}] no existe en las geometrias bases de arcos y nodos.'.format(
-                    feature_name, map_names
-                )
-                self.append_error(msg=msg_error, typ=self.get_feature_type(), code='10')  # check error codes = 1[x]
+    #         if not feature_id:  # not exists in geometries (arcs and nodes)
+    #             msg_error = 'El nombre [{}] en los mapas [{}] no existe en las geometrias bases de arcos y nodos.'.format(
+    #                 feature_name, map_names
+    #             )
+    #             self.append_error(msg=msg_error, typ=self.get_feature_type(), code='10')  # check error codes = 1[x]
 
-        self.summary.set_process_line(msg_name='check_names_with_geo', check_error=self.check_errors(code='10'))
+    #     self.summary.set_process_line(msg_name='check_names_with_geo', check_error=self.check_errors(code='10'))
 
-        return self.check_errors(code='10'), self.get_errors(code='10')
+    #     return self.check_errors(code='10'), self.get_errors(code='10')
 
-    # @main_task
-    def check_names_between_maps(self):
-        self.set_data_from_geo()  # get the feature names in geo maps (node and arc)
+    # # @main_task
+    # def check_names_between_maps(self):
+    #     self.set_data_from_geo()  # get the feature names in geo maps (node and arc)
 
-        if len(self._features_by_map) == 0:
-            self.set_feature_names_in_maps(imported=True)
+    #     if len(self._features_by_map) == 0:
+    #         self.set_feature_names_in_maps(imported=True)
 
-        check_maps = [f_name for f_name in self._features_by_map if len(self._features_by_map[f_name]) > 1]
-        for feature_name in check_maps:
-            map_names = ', '.join(self._features_by_map[feature_name])
-            msg_error = 'El nombre [{}] se encuentra en mas de un mapa ([{}]) al mismo tiempo.'.format(
-                feature_name, map_names
-            )
-            self.append_error(msg=msg_error, code='11', typ=self.get_feature_type())  # check error codes = 1[x]
+    #     check_maps = [f_name for f_name in self._features_by_map if len(self._features_by_map[f_name]) > 1]
+    #     for feature_name in check_maps:
+    #         map_names = ', '.join(self._features_by_map[feature_name])
+    #         msg_error = 'El nombre [{}] se encuentra en mas de un mapa ([{}]) al mismo tiempo.'.format(
+    #             feature_name, map_names
+    #         )
+    #         self.append_error(msg=msg_error, code='11', typ=self.get_feature_type())  # check error codes = 1[x]
 
-        self.summary.set_process_line(msg_name='check_names_between_maps', check_error=self.check_errors(code='11'))
+    #     self.summary.set_process_line(msg_name='check_names_between_maps', check_error=self.check_errors(code='11'))
 
-        return self.check_errors(code='11'), self.get_errors(code='11')
+    #     return self.check_errors(code='11'), self.get_errors(code='11')
 
     @staticmethod
     def _cell_order_criteria_default(cell, cells_dict, by_field='area'):

@@ -1,9 +1,8 @@
 import time
 from collections import namedtuple
 
-from grass.pygrass.vector import VectorTopo
+from qgis.core import QgsVectorLayer
 
-from utils.Config import ConfigApp
 from utils.Errors import ErrorManager
 from processors.FeatureProcessor import FeatureProcess
 from processors.GeoKernel import GeoKernel
@@ -105,13 +104,15 @@ class GroundwaterProcess(FeatureProcess):
 
         """
 
-    def __init__(self, geo: GeoKernel = None, config: ConfigApp = None, debug: bool = False, err: ErrorManager = None):
-        super().__init__(geo=geo, config=config, debug=debug, err=err)
+    def __init__(self, geo: GeoKernel = None, debug: bool = False, err: ErrorManager = None):
+        super().__init__(geo=geo, debug=debug, err=err)
 
         self.gws = {}
         self._gw_names = {}
 
     def _start(self, linkage_name: str):
+        #necesito esto?
+
         # import files to vector maps
         self.import_maps()
 
@@ -149,7 +150,8 @@ class GroundwaterProcess(FeatureProcess):
 
         # Set inputs into summary
         # # set main field in map
-        field = self.config.get_config_field_name(feature_type=self.get_feature_type(), field_type='main')
+        #el nombre sale de QGIS
+        # field = self.config.get_config_field_name(feature_type=self.get_feature_type(), field_type='main')
         self.summary.set_input_param(param_name='FIELD NAME', param_value='[{}]'.format(field))
 
         # # imported file
@@ -187,26 +189,51 @@ class GroundwaterProcess(FeatureProcess):
 
     # @main_task
     def make_cell_data_by_main_map(self, map_name, inter_map_name, inter_map_geo_type):
-        inter_map = VectorTopo(inter_map_name)
-        inter_map.open('r')
+        # Cargamos la capa vectorial en memoria
+        inter_map = QgsVectorLayer(inter_map_name, "inter_map", "ogr")
 
-        for feature_data in inter_map.viter(vtype=inter_map_geo_type):
-            if feature_data.cat is None:  # when topology has some errors
-                # print("[ERROR] ", a.cat, a.id)
+        # Usamos getFeatures() para iterar en PyQGIS
+        for feature_data in inter_map.getFeatures():
+            # Si necesitas verificar validez de la entidad, usa .id() o .isValid()
+            if not feature_data.isValid(): 
                 continue
 
             Cell = namedtuple('Cell_gw', ['row', 'col'])
 
+            # NOTA: Asegúrate de reemplazar esta lógica si ya no usas config.json
             fields = self.get_needed_field_names(alias=self.get_feature_type())
-            main_field, main_needed = fields['main']['name'], fields['main']['needed']
+            main_field = fields['main']['name'] 
+            
             field_feature_name = 'a_' + main_field
-            col_field = 'b_' + self.config.fields_db['linkage']['col_in']
-            row_field = 'b_' + self.config.fields_db['linkage']['row_in']
+            
+            # Suponiendo que config.fields_db ya no existe, deberás usar cadenas fijas 
+            # o importarlas de tu nuevo constants.py (ej. 'b_column', 'b_row')
+            col_field = 'b_column' 
+            row_field = 'b_row'
 
-            feature_name = feature_data.attrs[field_feature_name]
-            cell_area_id = feature_data.attrs['b_cat']  # id from cell in linkage map
-            area_row, area_col = feature_data.attrs[row_field], feature_data.attrs[col_field]
-            feature_area = feature_data.area()
+            # 1. Extracción de Atributos al estilo PyQGIS (usando corchetes)
+            feature_name = feature_data[field_feature_name]
+            cell_area_id = feature_data['b_cat'] 
+            area_row = feature_data[row_field]
+            area_col = feature_data[col_field]
+            
+            # 2. Cálculo de área con motor GEOS
+            feature_area = feature_data.geometry().area()
+
+            data = {
+                'area': feature_area,
+                'cell_id': cell_area_id,
+                'name': feature_name,
+                'map_name': map_name
+            }
+
+            cell = Cell(area_row, area_col)
+
+            self._set_cell(cell, feature_name, data, by_field=self.get_order_criteria_name())
+            if cell:
+                self.cells_by_map[map_name].append(cell)
+
+        # En QGIS la capa se maneja por recolector de basura, inter_map.close() ya no es necesario
 
             data = {
                 'area': feature_area,

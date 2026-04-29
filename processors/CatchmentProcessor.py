@@ -108,43 +108,28 @@ class CatchmentProcess(FeatureProcess):
 
     """
 
-    def __init__(self, geo: GeoKernel = None, config: ConfigApp = None, debug: bool = False, err: ErrorManager = None):
-        super().__init__(geo=geo, config=config, debug=debug, err=err)
+    def __init__(self, geo: GeoKernel = None, debug: bool = False, err: ErrorManager = None):
+        super().__init__(geo=geo, debug=debug, err=err)
 
         self.catchments = {}
         self._catchment_names = {}
 
-    def _start(self, linkage_name: str):
-        # import files to vector maps
-        self.import_maps()
-
-        # check catchment maps with geo maps (nodes and arcs)
-        self.check_names_with_geo()
-
-        # check catchment geometries
-        self.check_names_between_maps()
-
-        if not self.check_errors(types=[self.get_feature_type()]):
-            # intersection between C (catchments map) and L (linkage map)
-            _err_c, _errors_c = self.inter_map_with_linkage(linkage_name=linkage_name, snap='1e-12')
-            if _err_c:
-                self.print_errors()
-                raise RuntimeError('[EXIT] ERROR AL INTERSECTAR CON [{}]'.format(linkage_name))
-
-            # make a dictionary grid with cells information in intersection map
-            self.make_grid_cell()
-        # else:
-        #     self.print_errors()
-
-        # stats
-        self.stats['PROCESSED CELLS'] = len(self.cells)
-
     @TimerSummary.timeit
-    def run(self, linkage_name: str):
+    def run(self, linkage_layer):
         ts = time.time()
-        self._start(linkage_name=linkage_name)
+
+        # intersection between C (gw map) and L (linkage map)
+        _err_gw, _errors_gw = self.inter_map_with_linkage(linkage_name=linkage_layer)
+        
+        if _err_gw:
+            self.print_errors()
+            raise RuntimeError('[EXIT] ERROR AL INTERSECTAR CON [{}]'.format(linkage_layer))
+
+        # make a dictionary grid with cells information in intersection map
+        self.make_grid_cell()
         te = time.time()
 
+        self.stats['PROCESSED CELLS'] = len(self.cells)
         self.stats['FEATURES PROCESSED'] = '{}'.format(len(self._catchment_names))
         self.stats['PROCESSED TIME'] = '{0:.2f} seg'.format(te - ts)
 
