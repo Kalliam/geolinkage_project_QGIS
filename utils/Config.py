@@ -1,16 +1,7 @@
 import json
 import os
 import pathlib
-
-
-def read_config_file():
-    # read JSON config file
-    current_folder = pathlib.Path(__file__).parent.absolute()
-    with open(os.path.join(current_folder, '../config/config.json')) as json_data_file:
-        config_data = json.load(json_data_file)
-
-    return config_data
-
+from settings import FEATURE_NAMES, OUTPUT_FIELDS, NODE_COL, ARC_COL, NODE_TYPE_ID, ARC_TYPE_ID
 
 class ConfigApp:
     """
@@ -83,108 +74,117 @@ class ConfigApp:
 
         """
 
-    __config_data = read_config_file()
 
 
 
     def __init__(self, epsg_code: int = None, gisdb: str = None, location: str = None, mapset: str = None,
                  debug: bool = False, order_criteria: str = None, columns_to_save: int = None):
 
-        # read JSON config file
-        config_data = ConfigApp.__config_data
+        
 
         self.type_names = {
-            'GroundwaterProcess': config_data["FEATURE NAMES"]["groundwater"],
-            'CatchmentProcess': config_data["FEATURE NAMES"]["catchment"],
-            'RiverProcess': config_data["FEATURE NAMES"]["river"],
-            'DemandSiteProcess': config_data["FEATURE NAMES"]["demand sites"],
-            'GeoKernel': config_data["FEATURE NAMES"]["geometry"],
-            'AppKernel': config_data["FEATURE NAMES"]["main program"],
-            'GeoCheck': config_data["FEATURE NAMES"]["geometry checker"],
+            'GroundwaterProcess': FEATURE_NAMES.groundwater,
+            'CatchmentProcess': FEATURE_NAMES.catchment,
+            'RiverProcess': FEATURE_NAMES.river,
+            'DemandSiteProcess': FEATURE_NAMES.demand_sites,
+            'GeoKernel': FEATURE_NAMES.geometry,
+            'AppKernel': FEATURE_NAMES.main_program,
+            'GeoCheck': FEATURE_NAMES.geometry_checker,
         }
 
-        self.grass_internals = {
-            'EPSG_CODE': epsg_code,
-            'GISDB': gisdb,
-            'LOCATION': location,
-            'MAPSET': mapset
-        }
+
 
         self.debug = debug
 
         # Default names in vector maps
-        self.linkage_out = config_data["DEFAULT MAP NAMES"]["LINKAGE FINAL MAP"]
-        self.segments_map_name = config_data["DEFAULT MAP NAMES"]["RIVER SEGMENTS MAP"]
-        self.inter_river_linkage_name = config_data["DEFAULT MAP NAMES"]["LINKAGE INTER RIVER SEGMENTS MAP"]
-        self.inter_ds_linkage_name = config_data["DEFAULT MAP NAMES"]["LINKAGE INTER DEMAND SITE MAP"]
+        ### mover a la interfaz
+        # self.linkage_out = config_data["DEFAULT MAP NAMES"]["LINKAGE FINAL MAP"]
+        # self.segments_map_name = config_data["DEFAULT MAP NAMES"]["RIVER SEGMENTS MAP"]
+        # self.inter_river_linkage_name = config_data["DEFAULT MAP NAMES"]["LINKAGE INTER RIVER SEGMENTS MAP"]
+        # self.inter_ds_linkage_name = config_data["DEFAULT MAP NAMES"]["LINKAGE INTER DEMAND SITE MAP"]
 
         # Default opts
         # # order_criteria: to select between two or more geometries which intersect one cell
         # # columns_to_save: columns to save in final linkage file by feature
-        self.default_opts = {
-            self.type_names['CatchmentProcess']: {
-                'order_criteria': config_data["CELL OVERLAP CRITERIA"]["catchment"],
-                'columns_to_save': config_data["COLUMNS FOR FEATURE"]["catchment"]
-            },
-            self.type_names['GroundwaterProcess']: {
-                'order_criteria': config_data["CELL OVERLAP CRITERIA"]["groundwater"],
-                'columns_to_save': config_data["COLUMNS FOR FEATURE"]["groundwater"]
-            },
-            self.type_names['RiverProcess']: {
-                'order_criteria': config_data["CELL OVERLAP CRITERIA"]["river"],
-                'columns_to_save': config_data["COLUMNS FOR FEATURE"]["river"]
-            },
-            self.type_names['DemandSiteProcess']: {
-                'order_criteria': config_data["CELL OVERLAP CRITERIA"]["demand_site"],
-                'columns_to_save': config_data["COLUMNS FOR FEATURE"]["demand_site"]
-            },
-        }
+
+        ### 
+        # self.default_opts = {
+        #     "CELL OVERLAP CRITERIA": {
+        #         "catchment": "area",
+        #         "groundwater": "area",
+        #         "demand_site": "area",
+        #         "river": "length"
+        #     },
+
+ 
+        ## eliminar, QGIS se encarga de esto
+        # self.default_opts = {
+        #     self.type_names['CatchmentProcess']: {
+        #         'order_criteria': config_data["CELL OVERLAP CRITERIA"]["catchment"],
+        #         'columns_to_save': config_data["COLUMNS FOR FEATURE"]["catchment"]
+        #     },
+        #     self.type_names['GroundwaterProcess']: {
+        #         'order_criteria': config_data["CELL OVERLAP CRITERIA"]["groundwater"],
+        #         'columns_to_save': config_data["COLUMNS FOR FEATURE"]["groundwater"]
+        #     },
+        #     self.type_names['RiverProcess']: {
+        #         'order_criteria': config_data["CELL OVERLAP CRITERIA"]["river"],
+        #         'columns_to_save': config_data["COLUMNS FOR FEATURE"]["river"]
+        #     },
+        #     self.type_names['DemandSiteProcess']: {
+        #         'order_criteria': config_data["CELL OVERLAP CRITERIA"]["demand_site"],
+        #         'columns_to_save': config_data["COLUMNS FOR FEATURE"]["demand_site"]
+        #     },
+        # }
+
 
         # Metadata fields in vector maps
+
+        ## input se va para la interfaz de usuario
         self.fields_db = {
-            self.type_names['GeoKernel']: {
-                'arc_name': config_data["FIELDS IN INPUT MAP"]["geo_map"]["arc_name"],
-                'node_name': config_data["FIELDS IN INPUT MAP"]["geo_map"]["node_name"],
-                'arc_type': config_data["FIELDS IN INPUT MAP"]["geo_map"]["arc_type"],
-                'node_type': config_data["FIELDS IN INPUT MAP"]["geo_map"]["node_type"]
-            },
+            # self.type_names['GeoKernel']: {
+            #     'arc_name': config_data["FIELDS IN INPUT MAP"]["geo_map"]["arc_name"],
+            #     'node_name': config_data["FIELDS IN INPUT MAP"]["geo_map"]["node_name"],
+            #     'arc_type': config_data["FIELDS IN INPUT MAP"]["geo_map"]["arc_type"],
+            #     'node_type': config_data["FIELDS IN INPUT MAP"]["geo_map"]["node_type"]
+            # },
+            # self.type_names['CatchmentProcess']: {
+            #     'name': config_data["FIELDS IN INPUT MAP"]["catchment_map"]["name"],
+            #     'modflow': config_data["FIELDS IN INPUT MAP"]["catchment_map"]["modflow"]
+            # },
+            # self.type_names['GroundwaterProcess']: {
+            #     'name': config_data["FIELDS IN INPUT MAP"]["gw_map"]["name"]  # GW or GROUNDWAT usually
+            # },
+            # self.type_names['RiverProcess']: {
+            #     'priority': config_data["FIELDS IN INPUT MAP"]["river_map"]["priority"],  # not used yet
+            #     'segment_break_name': config_data["FIELDS IN INPUT MAP"]["river_map"]["segment_break_name"],
+            #     'river_name': config_data["FIELDS IN INPUT MAP"]["river_map"]["river_name"]
+            # },
+            # self.type_names['DemandSiteProcess']: {
+            #     'name': config_data["FIELDS IN INPUT MAP"]["ds_map"]["name"]
+            # },
+            # 'linkage-in': {  # init linkage
+            #     'row': config_data["FIELDS IN INPUT MAP"]["linkage_in_map"]["row"],
+            #     'col': config_data["FIELDS IN INPUT MAP"]["linkage_in_map"]["col"]
+            # }
             'linkage': {  # final linkage file
-                self.type_names['CatchmentProcess']: config_data["FIELDS IN OUTPUT FILE"]["catchment"],
-                self.type_names['GroundwaterProcess']: config_data["FIELDS IN OUTPUT FILE"]["groundwater"],
-                self.type_names['RiverProcess']: config_data["FIELDS IN OUTPUT FILE"]["river"],
-                self.type_names['DemandSiteProcess']: config_data["FIELDS IN OUTPUT FILE"]["demand_site"],
-                'row': config_data["FIELDS IN OUTPUT FILE"]["row"],
-                'col': config_data["FIELDS IN OUTPUT FILE"]["col"],
-                'rc': config_data["FIELDS IN OUTPUT FILE"]["rc"],
+                self.type_names['CatchmentProcess']: OUTPUT_FIELDS.catchment ,
+                self.type_names['GroundwaterProcess']: OUTPUT_FIELDS.groundwater ,
+                self.type_names['RiverProcess']: OUTPUT_FIELDS.river,
+                self.type_names['DemandSiteProcess']: OUTPUT_FIELDS.demand_site,
+                'row': OUTPUT_FIELDS.row,
+                'col': OUTPUT_FIELDS.col,
+                'rc': OUTPUT_FIELDS.rc,
                 'row_in': 'row',
                 'col_in': 'column'
             },
-            self.type_names['CatchmentProcess']: {
-                'name': config_data["FIELDS IN INPUT MAP"]["catchment_map"]["name"],
-                'modflow': config_data["FIELDS IN INPUT MAP"]["catchment_map"]["modflow"]
-            },
-            self.type_names['GroundwaterProcess']: {
-                'name': config_data["FIELDS IN INPUT MAP"]["gw_map"]["name"]  # GW or GROUNDWAT usually
-            },
-            self.type_names['RiverProcess']: {
-                'priority': config_data["FIELDS IN INPUT MAP"]["river_map"]["priority"],  # not used yet
-                'segment_break_name': config_data["FIELDS IN INPUT MAP"]["river_map"]["segment_break_name"],
-                'river_name': config_data["FIELDS IN INPUT MAP"]["river_map"]["river_name"]
-            },
-            self.type_names['DemandSiteProcess']: {
-                'name': config_data["FIELDS IN INPUT MAP"]["ds_map"]["name"]
-            },
-            'linkage-in': {  # init linkage
-                'row': config_data["FIELDS IN INPUT MAP"]["linkage_in_map"]["row"],
-                'col': config_data["FIELDS IN INPUT MAP"]["linkage_in_map"]["col"]
-            }
         }
 
         self.cols_linkage = {  # linkage-out is based from this
             'row': {
                 'action': 'rename',
-                'name_old': config_data["FIELDS IN INPUT MAP"]["linkage_in_map"]["row"],
-                'name': config_data["FIELDS IN OUTPUT FILE"]["row"],
+                #'name_old': config_data["FIELDS IN INPUT MAP"]["linkage_in_map"]["row"],
+                'name': OUTPUT_FIELDS.row,
                 'type': 'INT',
                 '_type_name': 'integer',
                 '_necessary': True
@@ -192,8 +192,8 @@ class ConfigApp:
 
             'col': {
                 'action': 'rename',
-                'name_old': config_data["FIELDS IN INPUT MAP"]["linkage_in_map"]["col"],
-                'name': config_data["FIELDS IN OUTPUT FILE"]["col"],
+                #'name_old': config_data["FIELDS IN INPUT MAP"]["linkage_in_map"]["col"],
+                'name': OUTPUT_FIELDS.col,
                 'type': 'INT',
                 '_type_name': 'integer',
                 '_necessary': True
@@ -201,7 +201,7 @@ class ConfigApp:
 
             'rc': {
                 'action': 'add',
-                'name': config_data["FIELDS IN OUTPUT FILE"]["rc"],
+                'name': OUTPUT_FIELDS.rc,
                 'type': 'VARCHAR',
                 '_type_name': 'varchar',
                 '_necessary': True
@@ -209,7 +209,7 @@ class ConfigApp:
 
             self.type_names['CatchmentProcess']: {
                 'action': 'add',
-                'name': config_data["FIELDS IN OUTPUT FILE"]["catchment"],
+                'name': OUTPUT_FIELDS.catchment,
                 'type': 'VARCHAR',
                 '_type_name': 'varchar',
                 '_necessary': True
@@ -217,7 +217,7 @@ class ConfigApp:
 
             'landuse': {
                 'action': 'add',
-                'name': config_data["FIELDS IN OUTPUT FILE"]["landuse"],
+                'name': OUTPUT_FIELDS.landuse,
                 'type': 'VARCHAR',
                 '_type_name': 'varchar',
                 '_necessary': True
@@ -225,7 +225,7 @@ class ConfigApp:
 
             self.type_names['GroundwaterProcess']: {
                 'action': 'add',
-                'name': config_data["FIELDS IN OUTPUT FILE"]["groundwater"],
+                'name': OUTPUT_FIELDS.groundwater,
                 'type': 'VARCHAR',
                 '_type_name': 'varchar',
                 '_necessary': True
@@ -233,21 +233,22 @@ class ConfigApp:
 
             self.type_names['RiverProcess']: {
                 'action': 'add',
-                'name': config_data["FIELDS IN OUTPUT FILE"]["river"],
+                'name': OUTPUT_FIELDS.river,
                 'type': 'VARCHAR', '_type_name': 'varchar',
                 '_necessary': True
             },
 
             self.type_names['DemandSiteProcess']: {
                 'action': 'add',
-                'name': config_data["FIELDS IN OUTPUT FILE"]["demand_site"],
+                'name': OUTPUT_FIELDS.demand_site,
                 'type': 'VARCHAR',
                 '_type_name': 'varchar',
                 '_necessary': True
             },
         }
 
-        self.process_msgs = config_data['PROCESSING LINES']
+        ## mensajes de consola que vienen desde settings.json, los quito de aca y se los pongo a cada postprocessor
+        # self.process_msgs = config_data['PROCESSING LINES']
 
         self.fields_needed = {
             'main': {  # alias: [name, needed]
@@ -279,10 +280,10 @@ class ConfigApp:
         }
 
         # prepare arc and node maps configuration
-        self.node_columns = config_data['GEO']['NODE_COL']  # columns to read node map
-        self.arc_columns = config_data['GEO']['ARC_COL']  # columns to read arc map
-        self.nodes_type_id = config_data['GEO']['NODE_TYPE_ID']  # node ids in node map
-        self.arc_type_id = config_data['GEO']['ARC_TYPE_ID']  # arc ids in node map
+        self.node_columns = NODE_COL  # columns to read node map
+        self.arc_columns = ARC_COL  # columns to read arc map
+        self.nodes_type_id = NODE_TYPE_ID  # node ids in node map
+        self.arc_type_id = ARC_TYPE_ID  # arc ids in node map
 
     def get_order_criteria(self, feature_type: str):
         ret = self.default_opts[feature_type]['order_criteria']
@@ -321,30 +322,6 @@ class ConfigApp:
     def get_feature_names(self):
         return self.type_names.values()
 
-    def set_epsg(self, epsg_code: int):
-        self.grass_internals['EPSG_CODE'] = epsg_code
-
-    def get_epsg(self):
-        return self.grass_internals['EPSG_CODE']
-
-    def set_gisdb(self, gisdb: str):
-        self.grass_internals['GISDB'] = gisdb
-
-    def get_gisdb(self):
-        return self.grass_internals['GISDB']
-
-    def set_location(self, location: str):
-        self.grass_internals['LOCATION'] = location
-
-    def get_location(self):
-        return self.grass_internals['LOCATION']
-
-    def set_mapset(self, mapset: str):
-        self.grass_internals['MAPSET'] = mapset
-
-    def get_mapset(self):
-        return self.grass_internals['MAPSET']
-
     def set_config_field(self, feature_type: str, field_type: str, field_new_name: str):
         _err = False
 
@@ -367,13 +344,14 @@ class ConfigApp:
     def get_linkage_out_file_name(self):
         return self.linkage_out
 
-    def get_process_msg(self, msg_name: str):
-        if msg_name in self.process_msgs:
-            msg_info = self.process_msgs[msg_name]
-        else:
-            msg_info = 'Message for [{}] not found!'.format(msg_name)
+    #mensajes de consola
+    # def get_process_msg(self, msg_name: str):
+    #     if msg_name in self.process_msgs:
+    #         msg_info = self.process_msgs[msg_name]
+    #     else:
+    #         msg_info = 'Message for [{}] not found!'.format(msg_name)
 
-        return msg_info
+    #     return msg_info
 
 
 

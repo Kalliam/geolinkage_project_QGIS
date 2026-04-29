@@ -132,15 +132,7 @@
     },
 
     ## dejar en settings o pasar a cada postprocessor que lo use?
-    "FEATURE NAMES": {
-        "groundwater": "groundwater",
-        "catchment": "catchment",
-        "demand sites": "demand_site",
-        "river": "river",
-        "geometry": "geo",
-        "main program": "main",
-        "geometry checker": "geo_check"
-    }
+
 }
 
 
@@ -199,6 +191,9 @@ OUTPUT_FIELDS = {
     "landuse": "LANDUSE"
 }
 
+
+
+
 # Límite de columnas generadas por tipo de feature
 FEATURE_COLUMN_LIMIT = {
     "catchment": 1,
@@ -220,3 +215,13 @@ ERROR_CODES = {
     'well_file': 'F-0000101',
     'ds_folder': 'F-0000102'
 }
+
+FEATURE_NAMES = {
+        "groundwater": "groundwater",
+        "catchment": "catchment",
+        "demand sites": "demand_site",
+        "river": "river",
+        "geometry": "geo",
+        "main program": "main",
+        "geometry checker": "geo_check"
+    }
