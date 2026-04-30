@@ -120,7 +120,7 @@ class CatchmentProcess(FeatureProcess):
 
         # intersection between C (gw map) and L (linkage map)
         _err_gw, _errors_gw = self.inter_map_with_linkage(linkage_name=linkage_layer)
-        
+
         if _err_gw:
             self.print_errors()
             raise RuntimeError('[EXIT] ERROR AL INTERSECTAR CON [{}]'.format(linkage_layer))
@@ -132,26 +132,10 @@ class CatchmentProcess(FeatureProcess):
         self.stats['PROCESSED CELLS'] = len(self.cells)
         self.stats['FEATURES PROCESSED'] = '{}'.format(len(self._catchment_names))
         self.stats['PROCESSED TIME'] = '{0:.2f} seg'.format(te - ts)
+        
+        return self.stats
 
-        # Set inputs into summary
-        # # set main field in map
-        field = self.config.get_config_field_name(feature_type=self.get_feature_type(), field_type='main')
-        self.summary.set_input_param(param_name='FIELD NAME', param_value='[{}]'.format(field))
 
-        # # imported file
-        map_names = [m for m in self.get_map_names(only_names=True, with_main_file=True, imported=True) if m[1]]
-        for map_name in map_names:
-            imported = self.map_names[map_name]['imported']
-            if imported:
-                self.summary.set_input_param(param_name='MAP {}'.format(map_name), param_value='[imported]')
-            else:
-                self.summary.set_input_param(param_name='MAP {}'.format(map_name), param_value='[not imported]')
-
-        # Set stats into summary
-        # # set cells
-        self.stats['PROCESSED CELLS'] = len(self.cells)
-        for stat_key in self.stats:
-            self.summary.set_input_param(param_name=stat_key, param_value='[{}]'.format(self.stats[stat_key]))
 
     def set_data_from_geo(self):
         if self.geo:  # set [self.catchments] and [self._catchment_names]
