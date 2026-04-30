@@ -256,8 +256,9 @@ class GroundwaterProcess(FeatureProcess):
 
         return self.check_errors(types=[self.get_feature_type()]), self.get_errors()
 
-    # @main_task
-    def make_cell_data_by_secondary_maps(self, map_name, inter_map_name, inter_map_geo_type):
-        # in this case is the same done with main map to secondary maps
-        return self.make_cell_data_by_main_map(map_name=map_name, inter_map_name=inter_map_name,
-                                               inter_map_geo_type=inter_map_geo_type)
+    ## hace lo mismo que la principal?
+    # # @main_task
+    # def make_cell_data_by_secondary_maps(self, map_name, inter_map_name, inter_map_geo_type):
+    #     # in this case is the same done with main map to secondary maps
+    #     return self.make_cell_data_by_main_map(map_name=map_name, inter_map_name=inter_map_name,
+    #                                            inter_map_geo_type=inter_map_geo_type)
