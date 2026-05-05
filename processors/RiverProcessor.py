@@ -1,10 +1,10 @@
 import time
 from collections import namedtuple
 
-from grass.exceptions import GrassError
-from grass.pygrass.vector import VectorTopo
+# from grass.exceptions import GrassError
+# from grass.pygrass.vector import VectorTopo
 
-from utils.Utils import GrassCoreAPI, TimerSummary
+# from utils.Utils import GrassCoreAPI, TimerSummary
 from utils.Config import ConfigApp
 from utils.Errors import ErrorManager
 from processors.FeatureProcessor import FeatureProcess
@@ -134,8 +134,8 @@ class RiverProcess(FeatureProcess):
 
         """
 
-    def __init__(self, geo: GeoKernel = None, config: ConfigApp = None, debug: bool = False, err: ErrorManager = None):
-        super().__init__(geo=geo, config=config, debug=debug, err=err)
+    def __init__(self, config: ConfigApp = None, debug: bool = False, err: ErrorManager = None):
+        super().__init__(config=config, debug=debug, err=err)
 
         self.rivers = {}
         self._river_names = {}

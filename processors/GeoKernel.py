@@ -1,10 +1,10 @@
 from qgis.core import QgsPointXY
 from utils.Utils import Utils, TimerSummary, UtilMisc
-from settings import *
 from utils.Errors import ErrorManager
 from utils.Protocols import MapFileManagerProtocol
 from utils.SummaryInfo import SummaryInfo
 
+from settings import NODE_COL, ARC_COL, NODE_TYPE_ID, ARC_TYPE_ID, ERROR_CODES
 
 class GeoKernel(MapFileManagerProtocol):
     """
@@ -191,7 +191,7 @@ class GeoKernel(MapFileManagerProtocol):
 
         """
 
-    def __init__(self, config: ConfigApp = None, debug=None, err: ErrorManager = None):
+    def __init__(self, config: None, debug=None, err: ErrorManager = None):
         super(GeoKernel, self).__init__(config=config, error=err)
 
         self.config = config
@@ -299,12 +299,12 @@ class GeoKernel(MapFileManagerProtocol):
         _err = False
 
         # prepare node and arc column names
-        node_column = self.config.node_columns
-        arc_column = self.config.arc_columns
+        node_column = NODE_COL
+        arc_column = ARC_COL
 
         # prepare node and arc type ids
-        node_type = self.config.nodes_type_id
-        arc_type = self.config.arc_type_id
+        node_type = NODE_TYPE_ID
+        arc_type = ARC_TYPE_ID
 
         for p in nodemap.viter('points'):
             point_name = p.attrs[node_column['name']]
