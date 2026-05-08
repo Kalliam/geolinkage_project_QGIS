@@ -191,7 +191,12 @@ OUTPUT_FIELDS = {
     "landuse": "LANDUSE"
 }
 
-
+COLUMNS_FOR_FEATURE= {
+        "catchment": 1,
+        "groundwater": 1,
+        "demand_site": 4,
+        "river": 1
+    },
 
 
 # Límite de columnas generadas por tipo de feature
