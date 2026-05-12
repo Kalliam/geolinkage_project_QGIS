@@ -2,10 +2,6 @@ from abc import abstractmethod, ABCMeta
 import processing
 from qgis.core import QgsVectorLayer
 
-from utils.Utils import GrassCoreAPI, UtilMisc
-from utils.Errors import ErrorManager
-from processors.GeoKernel import GeoKernel
-
 
 class FeatureProcess(metaclass=ABCMeta):
     """
@@ -112,30 +108,17 @@ class FeatureProcess(metaclass=ABCMeta):
 
         """
 
-    def __init__(self, geo: GeoKernel, config: ConfigApp = None, debug=None, err: ErrorManager = None):
-        super(FeatureProcess, self).__init__(config=config, error=err)
-
-        self.geo = geo
-        self.config = config
-
+    def __init__(self, debug: bool = False):
         self.cells = {}
         self.cell_ids = {}
-        self.map_names = {}
+        self.cells_by_map = {}
 
-        self._features_by_map = {}  # [feature_name] = [[map_name_1],... , [map_name_i]]
-        self.cells_by_map = {}  # [map_name_i] = [cell_i_1, ..., cell_i_j]
-
-        if debug is None:
-            self.__debug = self.config.debug if self.config is not None else False
-
-        self._feature_type = self.config.type_names[self.__class__.__name__]
+        self.__debug = debug
+        self._feature_type = self.__class__.__name__
 
         # stats
         self.stats = {}
 
-        self.z_rotation = None
-        self.x_ll = None  # real world model coords (lower left)
-        self.y_ll = None  # real world model coords (lower left)
     @staticmethod
     ## ordena los poligonos/lineas de una celda y los devuelve como lista
     def _cell_order_criteria_default(cell, cells_dict, by_field='area'):

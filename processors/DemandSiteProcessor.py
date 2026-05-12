@@ -3,9 +3,7 @@ from collections import namedtuple
 
 from qgis.core import QgsFeature, QgsVectorLayer
 
-from utils.Errors import ErrorManager
 from processors.FeatureProcessor import FeatureProcess
-from processors.GeoKernel import GeoKernel
 
 
 class DemandSiteProcess(FeatureProcess):
@@ -144,44 +142,42 @@ class DemandSiteProcess(FeatureProcess):
 
     """
 
-    def __init__(self, geo: GeoKernel = None, debug: bool = False, err: ErrorManager = None):
-        super().__init__(geo=geo, debug=debug, err=err)
-
-        self.demand_sites = {}
-        self.wells = {}  # [well_name] = {'name': '', 'path': '', 'type': '', 'is_well':(T|F), 'processed': (T|F)}
-        #self._demand_site_names = None
-
+    def __init__(self, debug: bool = False):
+        super().__init__(debug=debug)
 
     #@TimerSummary.timeit
-    def run(self, layer_malla, capa_pozos, capas_areas, col_nombre, col_row, col_col, col_cat, path_txt_pozos):
+    def run(self, grid_layer, well_layer, area_layers_list, col_name, col_row, col_col, col_cat, wells_txt_path):
         ts = time.time()
 
         # 1. Leer los nombres de los pozos desde el archivo de texto
-        lista_pozos = self.read_well_files(path_txt_pozos)
+        well_names = self.read_well_files(wells_txt_path)
 
         # 2. Procesar los POZOS (Puntos)
-        _err_pozos, _ = self.inter_map_with_linkage(capa_pozos, layer_malla)
-        if not _err_pozos:
-            self.make_cell_data_by_map(
-                inter_map_name="nombre_capa_interseccion_pozos", # Ajusta esto según FeatureProcessor
-                map_name=capa_pozos.name(),
-                col_nombre=col_nombre, col_row=col_row, col_col=col_col, col_cat=col_cat,
-                lista_pozos=lista_pozos,
-                es_pozo=True
+        _err_well, inter_well_layer = self.inter_map_with_linkage(well_layer, grid_layer, col_name)
+
+        if not _err_well:
+            self.process_intersection(
+                inter_layer=inter_well_layer,
+                map_name=well_layer.name(),
+                col_name=col_name, col_row=col_row, col_col=col_col, col_cat=col_cat,
+                well_names=well_names,
+                is_well=True
             )
 
         # 3. Procesar las ÁREAS (Polígonos secundarios)
         # Recorremos la lista de Shapefiles de áreas que el usuario subió (si es que subió alguna)
-        for capa_area in capas_areas:
-            _err_area, _ = self.inter_map_with_linkage(capa_area, layer_malla)
+        for area_layer in area_layers_list:
+            _err_area, inter_area_layer = self.inter_map_with_linkage(area_layer, grid_layer, col_name)
             if not _err_area:
-                self.make_cell_data_by_map(
-                    inter_map_name="nombre_capa_interseccion_area", # Ajusta esto según FeatureProcessor
-                    map_name=capa_area.name(),
-                    col_nombre=col_nombre, col_row=col_row, col_col=col_col, col_cat=col_cat,
-                    lista_pozos=None, # Las áreas no usan la lista de pozos
-                    es_pozo=False
+                self.process_intersection(
+                    inter_layer=inter_area_layer,
+                    map_name=area_layer.name(),
+                    col_name=col_name, col_row=col_row, col_col=col_col, col_cat=col_cat,
+                    well_names=None,
+                    is_well=False
                 )
+
+        self._set_cell_by_criteria(by_field='area')
 
         te = time.time()
         self.stats['PROCESSED CELLS'] = len(self.cells)
@@ -190,18 +186,14 @@ class DemandSiteProcess(FeatureProcess):
         return self.stats
 
     #@main_task
-    def make_cell_data_by_map(self, inter_map_name, map_name, col_nombre, col_row, col_col, col_cat, well_names=None, is_well=True):
+    def process_intersection(self, inter_layer, map_name, col_name, col_row, col_col, col_cat, well_names=None, is_well=True):
         """
         Procesa los resultados tanto para Pozos (Puntos) como para Demandas de Área (Polígonos).
         """
-        inter_map = QgsVectorLayer(inter_map_name, "inter_map", "ogr")
-        if not inter_map.isValid():
-            raise RuntimeError(f"Error al cargar la capa de intersección: {inter_map_name}")
-
         Cell = namedtuple('Cell_ds', ['row', 'col'])
 
-        for feature in inter_map.getFeatures():
-            feature_name = feature[col_nombre]
+        for feature in inter_layer.getFeatures():
+            feature_name = feature[col_name]
             
             # 1. Validación exclusiva para Pozos:
             # Si estamos procesando pozos, ignoramos el punto si no está en la lista del TXT
@@ -216,10 +208,10 @@ class DemandSiteProcess(FeatureProcess):
             # 3. La Diferencia Matemática (Puntos vs Polígonos)
             if is_well:
                 feature_area = 0  # Un pozo es un punto matemático, su área es 0
-                criterio = None   # Los pozos no compiten por espacio, simplemente se agregan (hasta 4 por celda)
+                criteria = None   # Los pozos no compiten por espacio, simplemente se agregan (hasta 4 por celda)
             else:
                 feature_area = feature.geometry().area() # Un área agrícola sí se calcula
-                criterio = "area" # Compiten por cuál cubre más la celda
+                criteria = "area" # Compiten por cuál cubre más la celda
 
             data = {
                 'area': feature_area,
@@ -231,9 +223,10 @@ class DemandSiteProcess(FeatureProcess):
             cell = Cell(area_row, area_col)
 
             # Inyectar los datos a la matriz de celdas
-            self._set_cell(cell, feature_name, data, by_field=criterio)
+            cell = Cell(area_row, area_col)
+
+            self._set_cell(cell, feature_name, data, by_field=criteria)
             
-            self.cells_by_map[map_name].append(cell)
 
 
     def read_well_files(self, path_archivo_txt):
