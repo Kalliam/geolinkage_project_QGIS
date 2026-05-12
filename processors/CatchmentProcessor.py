@@ -1,13 +1,9 @@
 import time
 from collections import namedtuple
 
-from grass.pygrass.vector import VectorTopo
+from qgis.core import QgsFeature, QgsVectorLayer
 
-from utils.Config import ConfigApp
-from utils.Errors import ErrorManager
 from processors.FeatureProcessor import FeatureProcess
-from processors.GeoKernel import GeoKernel
-from utils.Utils import TimerSummary
 
 
 class CatchmentProcess(FeatureProcess):
@@ -105,131 +101,64 @@ class CatchmentProcess(FeatureProcess):
 
     """
 
-    def __init__(self, geo: GeoKernel = None, config: ConfigApp = None, debug: bool = False, err: ErrorManager = None):
-        super().__init__(geo=geo, config=config, debug=debug, err=err)
+    def __init__(self, debug: bool = False):
+        super().__init__(debug=debug)
 
-        self.catchments = {}
-        self._catchment_names = {}
-
-    def _start(self, linkage_name: str):
-        # import files to vector maps
-        self.import_maps()
-
-        # check catchment maps with geo maps (nodes and arcs)
-        self.check_names_with_geo()
-
-        # check catchment geometries
-        self.check_names_between_maps()
-
-        if not self.check_errors(types=[self.get_feature_type()]):
-            # intersection between C (catchments map) and L (linkage map)
-            _err_c, _errors_c = self.inter_map_with_linkage(linkage_name=linkage_name, snap='1e-12')
-            if _err_c:
-                self.print_errors()
-                raise RuntimeError('[EXIT] ERROR AL INTERSECTAR CON [{}]'.format(linkage_name))
-
-            # make a dictionary grid with cells information in intersection map
-            self.make_grid_cell()
-        # else:
-        #     self.print_errors()
-
-        # stats
-        self.stats['PROCESSED CELLS'] = len(self.cells)
-
-    @TimerSummary.timeit
-    def run(self, linkage_name: str):
+    def run(self, grid_layer, catchment_layer, col_name, col_row, col_col, col_cat):
         ts = time.time()
-        self._start(linkage_name=linkage_name)
+
+        # intersection between C (catchment map) and L (linkage map)
+        _err_cat, intersected_layer = self.inter_map_with_linkage(catchment_layer, grid_layer, col_name)
+
+        if _err_cat:
+            raise RuntimeError('[EXIT] ERROR AL INTERSECTAR CON [{}]'.format(catchment_layer))
+
+        # make a dictionary grid with cells information in intersection map
+        
         te = time.time()
 
+        self.process_intersection(
+            inter_layer=intersected_layer, 
+            map_name=catchment_layer.name(),
+            col_name=col_name, 
+            col_row=col_row, 
+            col_col=col_col, 
+            col_cat=col_cat
+        )
+
+
+        self.stats['PROCESSED CELLS'] = len(self.cells)
         self.stats['FEATURES PROCESSED'] = '{}'.format(len(self._catchment_names))
         self.stats['PROCESSED TIME'] = '{0:.2f} seg'.format(te - ts)
 
-        # Set inputs into summary
-        # # set main field in map
-        field = self.config.get_config_field_name(feature_type=self.get_feature_type(), field_type='main')
-        self.summary.set_input_param(param_name='FIELD NAME', param_value='[{}]'.format(field))
-
-        # # imported file
-        map_names = [m for m in self.get_map_names(only_names=True, with_main_file=True, imported=True) if m[1]]
-        for map_name in map_names:
-            imported = self.map_names[map_name]['imported']
-            if imported:
-                self.summary.set_input_param(param_name='MAP {}'.format(map_name), param_value='[imported]')
-            else:
-                self.summary.set_input_param(param_name='MAP {}'.format(map_name), param_value='[not imported]')
-
-        # Set stats into summary
-        # # set cells
-        self.stats['PROCESSED CELLS'] = len(self.cells)
-        for stat_key in self.stats:
-            self.summary.set_input_param(param_name=stat_key, param_value='[{}]'.format(self.stats[stat_key]))
-
-    def set_data_from_geo(self):
-        if self.geo:  # set [self.catchments] and [self._catchment_names]
-            self.set_catchments(self.geo.get_catchments())
-
-        return True, []
-
-    def get_feature_id_by_name(self, feature_name):
-        feature_id = self._catchment_names[feature_name] if feature_name in self._catchment_names else None
-        return feature_id
-
-    def set_catchments(self, catchments):
-        self.catchments = catchments
-
-        self._catchment_names = {}
-        for point_id in self.catchments:
-            catchment_data = self.catchments[point_id]
-            self._catchment_names[catchment_data['name']] = point_id
+        self._set_cell_by_criteria(by_field='area')
+        
+        return self.stats
 
     # @main_task
-    def make_cell_data_by_main_map(self, map_name, inter_map_name, inter_map_geo_type):
-        inter_map = VectorTopo(inter_map_name)
-        inter_map.open('r')
+    ##Esta función recorre un pedacitos de poligono, uno por uno. Por cada fragmento:
+    ## A que cuenca pertenece? (feature_name)
+    ## En que celda de la malla cayo? (row, col)
+    ## Cual es el tamaño exacto de ese fragmento? (feature_data.geometry().area())
+    ##guarda esto en un diccionario (data) para que el programa pueda construir la matriz final.
+    def process_intersection(self, inter_layer, map_name, col_name, col_row, col_col, col_cat):
+        Cell = namedtuple('Cell', ['row', 'col'])
 
-        for feature_data in inter_map.viter(vtype=inter_map_geo_type):
-            if feature_data.cat is None:  # when topology has some errors
-                # print("[ERROR] ", a.cat, a.id)
+        for feature in inter_layer.getFeatures():
+            if not feature.isValid() or not feature.hasGeometry(): 
                 continue
 
-            Cell = namedtuple('Cell_catchment', ['row', 'col'])
-
-            fields = self.get_needed_field_names(alias=self.get_feature_type())
-            main_field, main_needed = fields['main']['name'], fields['main']['needed']
-            field_feature_name = 'a_' + main_field
-            col_field = 'b_' + self.config.fields_db['linkage']['col_in']
-            row_field = 'b_' + self.config.fields_db['linkage']['row_in']
-
-            feature_name = feature_data.attrs[field_feature_name]
-            cell_area_id = feature_data.attrs['b_cat']  # id from cell in linkage map
-            area_row, area_col = feature_data.attrs[row_field], feature_data.attrs[col_field]
-            feature_area = feature_data.area()
+            feature_name = feature[col_name]
+            area_row, area_col = feature[col_row], feature[col_col]
+            cell_id = feature[col_cat]
+            feature_area = feature.geometry().area()
 
             data = {
                 'area': feature_area,
-                'cell_id': cell_area_id,
+                'cell_id': cell_id,
                 'name': feature_name,
                 'map_name': map_name
             }
 
             cell = Cell(area_row, area_col)
-
-            self._set_cell(cell, feature_name, data, by_field=self.get_order_criteria_name()) if cell else None
-
-            self.cells_by_map[map_name].append(cell) if cell else None  # order cells by map name (be used in DS)
-
-        inter_map.close()
-
-        self.summary.set_process_line(msg_name='make_cell_data_by_main_map', check_error=self.check_errors(types=[self.get_feature_type()]),
-                                      map_name=map_name, inter_map_name=inter_map_name,
-                                      inter_map_geo_type=inter_map_geo_type)
-
-        return self.check_errors(types=[self.get_feature_type()]), self.get_errors()
-
-    # @main_task
-    def make_cell_data_by_secondary_maps(self, map_name, inter_map_name, inter_map_geo_type):
-        # in this case is the same but done with main map to secondary maps
-        return self.make_cell_data_by_main_map(map_name=map_name, inter_map_name=inter_map_name,
-                                               inter_map_geo_type=inter_map_geo_type)
-
+            self._set_cell(cell, feature_name, data, by_field='area')

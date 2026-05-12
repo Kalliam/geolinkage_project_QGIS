@@ -132,15 +132,7 @@
     },
 
     ## dejar en settings o pasar a cada postprocessor que lo use?
-    "FEATURE NAMES": {
-        "groundwater": "groundwater",
-        "catchment": "catchment",
-        "demand sites": "demand_site",
-        "river": "river",
-        "geometry": "geo",
-        "main program": "main",
-        "geometry checker": "geo_check"
-    }
+
 }
 
 
@@ -199,6 +191,14 @@ OUTPUT_FIELDS = {
     "landuse": "LANDUSE"
 }
 
+COLUMNS_FOR_FEATURE= {
+        "catchment": 1,
+        "groundwater": 1,
+        "demand_site": 4,
+        "river": 1
+    },
+
+
 # Límite de columnas generadas por tipo de feature
 FEATURE_COLUMN_LIMIT = {
     "catchment": 1,
@@ -206,3 +206,27 @@ FEATURE_COLUMN_LIMIT = {
     "demand_site": 4,
     "river": 1
 }
+
+# -[first letter of error]-[main][catchment][gw][river][ds][geo][check][error]
+ERROR_CODES = {
+    'node_file': 'G-0000101',
+    'arc_file': 'G-0000102',
+    'geo_basic_column': 'G-0000103',
+    'not_found_file': 'G-0000104',
+    'linkage_in_file': 'M-1000001',
+    'linkage_out_file': 'M-1000002',
+    'check_results_folder': 'C-0000011',
+    'feature_file': 'F-0111101',
+    'well_file': 'F-0000101',
+    'ds_folder': 'F-0000102'
+}
+
+FEATURE_NAMES = {
+        "groundwater": "groundwater",
+        "catchment": "catchment",
+        "demand sites": "demand_site",
+        "river": "river",
+        "geometry": "geo",
+        "main program": "main",
+        "geometry checker": "geo_check"
+    }
