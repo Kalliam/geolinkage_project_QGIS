@@ -1,5 +1,6 @@
 from postprocessors.Check import Check
 from utils.Visualizer import Visualizer
+from settings import NODE_TYPE_ID
 import numpy as np
 
 class SuperpositionCheck(Check):
@@ -86,8 +87,8 @@ class SuperpositionCheck(Check):
         self.base_feature = base_feature
         self.secondary_feature = secondary_feature
 
-        self.base_feature_type_id = config.nodes_type_id[self.base_feature]
-        self.secondary_feature_type_id = config.nodes_type_id[self.secondary_feature]
+        self.base_feature_type_id = NODE_TYPE_ID[self.base_feature]
+        self.secondary_feature_type_id = NODE_TYPE_ID[self.secondary_feature]
 
         self.base_names = {}
         self.secondary_names = {}
