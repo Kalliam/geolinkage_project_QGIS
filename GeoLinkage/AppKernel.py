@@ -10,7 +10,7 @@ from postprocessors.GeoChecker import GeoChecker
 from postprocessors.SuperpositionCheck import SuperpositionCheck
 from processors.RiverProcessor import RiverProcess
 from  utils.Visualizer import *
-import settings
+import GeoLinkage.settings
 
 class AppKernel():
     """
