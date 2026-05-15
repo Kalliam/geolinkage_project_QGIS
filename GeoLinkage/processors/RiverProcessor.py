@@ -201,50 +201,56 @@ class RiverProcess(FeatureProcess):
             if not geom_nodo:
                 continue
 
-            # 3. Encontrar el río más cercano a este nodo
-            # nearestNeighbor devuelve una lista de IDs (pedimos el primero: [0])
-            id_rio_cercano = indice_rios.nearestNeighbor(geom_nodo.asPoint(), 1)[0]
-            feature_rio = dict_rios[id_rio_cercano]
-            geom_rio = feature_rio.geometry()
+            # --- BUSCAMOS LOS 2 RÍOS MÁS CERCANOS ---
+            # En lugar de pedir 1, pedimos 2 vecinos al índice espacial
+            ids_rios_cercanos = indice_rios.nearestNeighbor(geom_nodo.asPoint(), 2)
+            
+            if not ids_rios_cercanos:
+                continue
 
-            # --- LA MAGIA MATEMÁTICA DE PYQGIS ---
-            # lineLocatePoint te dice exactamente a cuántos metros desde el inicio del río 
-            # se encuentra proyectado este punto. ¡Reemplaza todo el motor de GRASS!
-            distancia_al_nodo = geom_rio.lineLocatePoint(geom_nodo)
+            # El río principal siempre es el más cercano (índice 0)
+            id_rio_principal = ids_rios_cercanos[0]
+            feature_rio_principal = dict_rios[id_rio_principal]
+            geom_rio_principal = feature_rio_principal.geometry()
+            distancia_principal = geom_rio_principal.lineLocatePoint(geom_nodo)
 
-            # Extraemos atributos para el RiverNode
             nodo_id = feature_nodo.id()
             nodo_nombre = feature_nodo[col_node_name]
-            rio_id = feature_rio.id()
-            rio_nombre = feature_rio[col_river_name]
-            
-            # Asumimos que cat es el ID para simplificar (ajusta según tu lógica)
-            rio_cat = feature_rio.id() 
+            rio_nombre_principal = feature_rio_principal[col_river_name]
+            rio_cat_principal = feature_rio_principal.id() 
 
-            # 4. Crear la instancia de RiverNode (Mantenemos tu lógica original)
             river_node = RiverNode(
-                node_id=nodo_id, 
-                node_name=nodo_nombre, 
-                node_type=tipo_nodo,
-                node_distance=distancia_al_nodo, # ¡Calculado nativamente!
-                root_node=self.root, 
-                parent=self.root
+                node_id=nodo_id, node_name=nodo_nombre, node_type=tipo_nodo,
+                node_distance=distancia_principal, root_node=self.root, parent=self.root
             )
-            
-            # Guardamos las coordenadas X, Y
             punto_xy = geom_nodo.asPoint()
             river_node.set_coords(punto_xy.x(), punto_xy.y())
 
-            # Asignamos el río principal al nodo
-            river_node.set_main_river(rio_id, rio_nombre, rio_cat, distancia_al_nodo)
+            # Asignamos el principal
+            river_node.set_main_river(id_rio_principal, rio_nombre_principal, rio_cat_principal, distancia_principal)
 
-            # [WEAP LOGIC]: Si es un nodo Tributario (Tipo 13), habría que buscar el río secundario.
-            if tipo_nodo == 13:
-                # Nota: Aquí deberías implementar la búsqueda del 2do río más cercano
-                # (el tributario que desemboca aquí) usando indice_rios.nearestNeighbor(..., 2)
-                pass
+            # --- LA RESTAURACIÓN DEL RÍO SECUNDARIO ---
+            # Si es un tributario (13) y encontramos un segundo río cerca (índice 1)
+            if tipo_nodo == 13 and len(ids_rios_cercanos) > 1:
+                id_rio_secundario = ids_rios_cercanos[1]
+                feature_rio_secundario = dict_rios[id_rio_secundario]
+                geom_rio_secundario = feature_rio_secundario.geometry()
+                
+                # Verificamos si realmente se conectan. Calculamos la distancia del nodo al segundo río
+                distancia_secundaria = geom_rio_secundario.lineLocatePoint(geom_nodo)
+                
+                # Extraemos el nombre para validar si es el "Inflow" correcto 
+                rio_nombre_secundario = feature_rio_secundario[col_river_name]
+                rio_cat_secundario = feature_rio_secundario.id()
+                
+                # Asignamos al nodo (Asumiendo que RiverNode aún tiene el método set_secondary_river)
+                river_node.set_secondary_river(
+                    id_rio_secundario, 
+                    rio_nombre_secundario, 
+                    rio_cat_secundario, 
+                    distancia_secundaria
+                )
 
-        # Devolvemos el árbol construido
         return self.root
 
     def make_segmented_river_layer(self, river_layer, node_layer, col_node_type, col_node_name, col_river_name):
@@ -287,7 +293,11 @@ class RiverProcess(FeatureProcess):
             
             for segment in river_segments:
                 dist_start = segment['start_distance']
-                dist_end = segment['end_distance']
+                # Si end_distance es None (el último pedazo), calculamos la longitud total real
+                if segment['end_distance'] is None:
+                    dist_end = feature_river.geometry().length()
+                else:
+                    dist_end = segment['end_distance']
                 
                 # LA MAGIA DE QGIS: Cortar la línea matemáticamente
                 cut_geometry = feature_river.geometry().curveSubstring(dist_start, dist_end)
@@ -307,22 +317,17 @@ class RiverProcess(FeatureProcess):
 
     def get_river_segments_from_tree(self, feature_river):
         """
-        TODO: PENDIENTE DE IMPLEMENTACIÓN.
-        Debe interactuar con self.root (RiverNode) y retornar una lista de diccionarios 
-        con este formato basándose en los cortes del río específico:
-        [
-            {'start_distance': 0.0, 'end_distance': 450.5, 'river_name': 'Rio_A', 'segment_break_name': 'Upper'},
-            {'start_distance': 450.5, 'end_distance': 1000.0, 'river_name': 'Rio_A', 'segment_break_name': 'Lower'}
-        ]
+        Obtiene los segmentos reales generados por RiverNode.
         """
-        # Lógica provisional para evitar crash. Corta el río en un solo segmento completo.
-        length = feature_river.geometry().length()
-        return [{
-            'start_distance': 0.0, 
-            'end_distance': length, 
-            'river_name': 'TEST', 
-            'segment_break_name': 'TEST'
-        }]
+        # Suponiendo que armaste el árbol en self.root en pasos anteriores
+        # Solo necesitamos filtrar los segmentos que pertenezcan a este río específico
+        all_segments = self.root.get_segments_list()
+        
+        # Filtramos por el nombre del río (asumiendo que feature_river['river_name'] existe)
+        # Ajusta el nombre de la columna según corresponda en tu capa
+        river_name = feature_river['nombre_de_la_columna_rio'] 
+        
+        return [seg for seg in all_segments if seg['river_name'] == river_name]
 
     # @main_task
     ## procesa la interseccion del mapa de rios con la malla de MODFLOW

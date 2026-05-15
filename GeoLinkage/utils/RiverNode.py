@@ -279,58 +279,29 @@ class RiverNode(NodeMixin):
 
         return segments_str
 
-    def get_break_input_by_river(self, river_node_id=None):
-        if river_node_id:
-            river_node = find_by_attr(self, name="node_id", value=river_node_id)
-        else:
-            river_node = self
+    def get_river_segments_recursive(self, last_child, segments):
+        node_before_name = last_child.node_name
+        node_before_distance = last_child.node_distance
 
-        # river data
-        river_node_id = river_node.node_id
-        river_node_name = river_node.node_name
-        river_node_cat = river_node.node_cat
-        river_node_distance = river_node.node_distance
+        # get properties from main river arc associated
+        river_node_name = last_child.main_river_name
+        river_node_cat = last_child.main_river_cat
 
-        children = river_node.get_order_children_by_distance()
+        # generate segment string
+        for i, child_node in enumerate(last_child.children):
 
-        # inital condition
-        segments = []
-        node_before_name = river_node_name
-        node_before_distance = 0
-        last_child = river_node
-        for i, child_node in enumerate(children):
-            # (1) make segments from this child
-            if not child_node.is_leaf:
-                child_node.get_break_input_by_river()
-            else:  # to keep the river segment if it has a secondary river
-                if child_node.node_type == 13 and child_node.secondary_river_id:  # is a Tributary Inflow Node
-                    break_name = "Below {} Headflow".format(child_node.secondary_river_name)
-                    segment = {
-                        'type': 'L',
-                        'cat': child_node.secondary_river_cat,
-                        'start_offset': '0',
-                        'end_offset': '100%',
-                        'break_name': break_name,
-                        'river_name': child_node.secondary_river_name
-                    }
-                    segments.append(segment)
-
-            # (2) make input from child to parent river
             child_name = child_node.node_name
             child_distance = child_node.node_distance  # distance from main river
-            child_id = child_node.node_id  # id from WEAPNode map
 
             if i == 0:
-                break_name = "Below {} Headflow".format(node_before_name)
+                break_name = f"Below {node_before_name} Headflow"
             else:
-                break_name = "Below {}".format(node_before_name)
+                break_name = f"Below {node_before_name}"
 
             segment = {
-                'type': 'L',
-                'cat': river_node_cat,
-                'start_offset': node_before_distance,
-                'end_offset': child_distance,
-                'break_name': break_name,
+                'start_distance': node_before_distance,
+                'end_distance': child_distance,
+                'segment_break_name': break_name,
                 'river_name': river_node_name
             }
             segments.append(segment)
@@ -342,20 +313,15 @@ class RiverNode(NodeMixin):
         else:
             child_name = last_child.node_name
             child_distance = last_child.node_distance  # distance from main river
-            child_id = last_child.node_id * 100  # unique ID using double 0's for final segment
 
-            break_name = "Below {}".format(child_name)
+            break_name = f"Below {child_name}"
 
             segment = {
-                'type': 'L',
-                'cat': river_node_cat,
-                'start_offset': child_distance,
-                'end_offset': '100%',
-                'break_name': break_name,
+                'start_distance': child_distance,
+                'end_distance': None,  # Usamos None en lugar de '100%'
+                'segment_break_name': break_name,
                 'river_name': river_node_name
             }
             segments.append(segment)
-
-        river_node.river_segments = segments
 
         return segments
