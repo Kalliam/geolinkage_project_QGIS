@@ -93,10 +93,10 @@
     <widget class="QLabel" name="label_8">
      <property name="geometry">
       <rect>
-       <x>390</x>
-       <y>210</y>
-       <width>151</width>
-       <height>61</height>
+       <x>20</x>
+       <y>30</y>
+       <width>141</width>
+       <height>20</height>
       </rect>
      </property>
      <property name="text">
@@ -112,15 +112,8 @@
        <height>21</height>
       </rect>
      </property>
-    </widget>
-    <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_5">
-     <property name="geometry">
-      <rect>
-       <x>400</x>
-       <y>260</y>
-       <width>101</width>
-       <height>21</height>
-      </rect>
+     <property name="filters">
+      <set>Qgis::LayerFilter::PolygonLayer|Qgis::LayerFilter::TiledSceneLayer</set>
      </property>
     </widget>
     <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_2">
@@ -131,6 +124,9 @@
        <width>101</width>
        <height>21</height>
       </rect>
+     </property>
+     <property name="filters">
+      <set>Qgis::LayerFilter::PolygonLayer|Qgis::LayerFilter::TiledSceneLayer</set>
      </property>
     </widget>
     <widget class="QLabel" name="label">
@@ -162,8 +158,8 @@
     <widget class="QCheckBox" name="checkBox_2">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>20</y>
+       <x>180</x>
+       <y>30</y>
        <width>301</width>
        <height>21</height>
       </rect>
@@ -412,7 +408,7 @@
     <widget class="QLabel" name="label_11">
      <property name="geometry">
       <rect>
-       <x>190</x>
+       <x>200</x>
        <y>150</y>
        <width>111</width>
        <height>20</height>
@@ -438,7 +434,7 @@
     <widget class="QLineEdit" name="lineEdit_folder_3">
      <property name="geometry">
       <rect>
-       <x>190</x>
+       <x>200</x>
        <y>170</y>
        <width>113</width>
        <height>21</height>
@@ -448,7 +444,7 @@
     <widget class="QPushButton" name="btn_explore_folder_3">
      <property name="geometry">
       <rect>
-       <x>190</x>
+       <x>200</x>
        <y>190</y>
        <width>113</width>
        <height>24</height>
@@ -513,6 +509,9 @@
        <height>21</height>
       </rect>
      </property>
+     <property name="filters">
+      <set>Qgis::LayerFilter::PointLayer</set>
+     </property>
     </widget>
     <widget class="QLabel" name="label_3">
      <property name="geometry">
@@ -535,6 +534,9 @@
        <width>101</width>
        <height>21</height>
       </rect>
+     </property>
+     <property name="filters">
+      <set>Qgis::LayerFilter::LineLayer|Qgis::LayerFilter::RasterLayer</set>
      </property>
     </widget>
     <widget class="QgsFieldComboBox" name="mFieldComboBox_4">
@@ -569,7 +571,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>150</y>
+       <y>70</y>
        <width>113</width>
        <height>21</height>
       </rect>
@@ -579,7 +581,7 @@
      <property name="geometry">
       <rect>
        <x>330</x>
-       <y>170</y>
+       <y>90</y>
        <width>75</width>
        <height>24</height>
       </rect>
@@ -592,7 +594,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>100</y>
+       <y>20</y>
        <width>131</width>
        <height>20</height>
       </rect>
@@ -605,7 +607,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>130</y>
+       <y>50</y>
        <width>141</width>
        <height>20</height>
       </rect>
@@ -618,7 +620,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>170</y>
+       <y>90</y>
        <width>113</width>
        <height>24</height>
       </rect>
@@ -627,24 +629,11 @@
       <string>Select Ruta</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_5">
-     <property name="geometry">
-      <rect>
-       <x>230</x>
-       <y>30</y>
-       <width>101</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Z-rotation</string>
-     </property>
-    </widget>
     <widget class="QLineEdit" name="lineEdit_folder">
      <property name="geometry">
       <rect>
        <x>190</x>
-       <y>150</y>
+       <y>70</y>
        <width>113</width>
        <height>21</height>
       </rect>
@@ -654,7 +643,7 @@
      <property name="geometry">
       <rect>
        <x>190</x>
-       <y>170</y>
+       <y>90</y>
        <width>113</width>
        <height>24</height>
       </rect>
@@ -667,105 +656,13 @@
      <property name="geometry">
       <rect>
        <x>190</x>
-       <y>130</y>
+       <y>50</y>
        <width>101</width>
        <height>20</height>
       </rect>
      </property>
      <property name="text">
       <string>Results Folder</string>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="doubleSpinBox">
-     <property name="geometry">
-      <rect>
-       <x>230</x>
-       <y>50</y>
-       <width>88</width>
-       <height>23</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_6">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>30</y>
-       <width>101</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>X Lower-Left</string>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="doubleSpinBox_5">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>50</y>
-       <width>88</width>
-       <height>23</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="doubleSpinBox_6">
-     <property name="geometry">
-      <rect>
-       <x>130</x>
-       <y>50</y>
-       <width>88</width>
-       <height>23</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_31">
-     <property name="geometry">
-      <rect>
-       <x>130</x>
-       <y>30</y>
-       <width>101</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Y Lower-Left</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="lineEdit_folder_10">
-     <property name="geometry">
-      <rect>
-       <x>420</x>
-       <y>80</y>
-       <width>113</width>
-       <height>21</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_54">
-     <property name="geometry">
-      <rect>
-       <x>420</x>
-       <y>60</y>
-       <width>71</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Examinar...</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="btn_explore_folder_10">
-     <property name="geometry">
-      <rect>
-       <x>420</x>
-       <y>100</y>
-       <width>113</width>
-       <height>24</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Select Ruta</string>
      </property>
     </widget>
    </widget>
