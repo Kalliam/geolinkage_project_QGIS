@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors 
@@ -85,24 +86,27 @@ class Visualizer:
             label_fontsize = min(10, 300 // len(color_labels))
             cbar_obj.ax.tick_params(labelsize=label_fontsize)
         
-        
+        file_path = os.path.join(self.result_path, f"{name}.pdf")
 
         # Save the plot as an SVG
-        plt.savefig(self.result_path + '/' + name + '.pdf', format='pdf', bbox_inches='tight')
-        plt.clf()  # Clear the figure for the next plot
+        plt.savefig(file_path, format='pdf', bbox_inches='tight')
+        plt.close()  # Clear the figure for the next plot
 
 
     def write_text_file(self, name, text=None, texts=None, preface=None):
         if not self.result_path:
             raise ValueError('Result path is not set. Please set the result path')
+            
+        file_path = os.path.join(self.result_path, f"{name}.txt")
+
         if text:
-            with open(self.result_path + '/' + name + '.txt', 'w') as file:
+            with open(file_path, 'w', encoding='utf-8') as file:
                 if preface:
                     file.write(preface + '\n')
                 file.write(text + '\n')
 
         elif texts:
-            with open(self.result_path + '/' + name + '.txt', 'w') as file:
+            with open(file_path, 'w', encoding='utf-8') as file:
                 if preface:
                     file.write(preface + '\n')
                 for text in texts:

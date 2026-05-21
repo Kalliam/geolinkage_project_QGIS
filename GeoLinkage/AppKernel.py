@@ -119,6 +119,8 @@ class AppKernel():
     #         )
         
     # def run_geo_checker(self, result_path: str):
+    #     geochecker_out = os.path.join(base_output_path, "geochecker_results")
+    #     os.makedirs(geochecker_out, exist_ok=True)
     #     self.geo_checker.set_result_path(result_path)
     #     self.geo_checker.setup(consolidate_cells=self.consolidate_cells, arcs=self.geo_processor.arcs, nodes=self.geo_processor.nodes)
     #     self.geo_checker.run()

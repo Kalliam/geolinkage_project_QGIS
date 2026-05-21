@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>589</width>
+    <width>588</width>
     <height>369</height>
    </rect>
   </property>
@@ -35,7 +35,7 @@
     <bool>false</bool>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>2</number>
    </property>
    <property name="movable">
     <bool>false</bool>
@@ -44,7 +44,7 @@
     <attribute name="title">
      <string>Capas Principales</string>
     </attribute>
-    <widget class="QgsFieldComboBox" name="mFieldComboBox_2">
+    <widget class="QgsFieldComboBox" name="cmb_field_nombre_gw">
      <property name="geometry">
       <rect>
        <x>270</x>
@@ -54,7 +54,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QgsFieldComboBox" name="mFieldComboBox">
+    <widget class="QgsFieldComboBox" name="cmb_field_nombre_cuenca">
      <property name="geometry">
       <rect>
        <x>130</x>
@@ -103,7 +103,7 @@
       <string>MODFLOW/ emptyLinkage</string>
      </property>
     </widget>
-    <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox">
+    <widget class="QgsMapLayerComboBox" name="cmb_layer_cuencas">
      <property name="geometry">
       <rect>
        <x>130</x>
@@ -116,7 +116,7 @@
       <set>Qgis::LayerFilter::PolygonLayer|Qgis::LayerFilter::TiledSceneLayer</set>
      </property>
     </widget>
-    <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_2">
+    <widget class="QgsMapLayerComboBox" name="cmb_layer_gw">
      <property name="geometry">
       <rect>
        <x>270</x>
@@ -155,7 +155,7 @@
       <string>Layer name</string>
      </property>
     </widget>
-    <widget class="QCheckBox" name="checkBox_2">
+    <widget class="QCheckBox" name="chk_modflow">
      <property name="geometry">
       <rect>
        <x>180</x>
@@ -196,7 +196,7 @@
        <string>Y Lower-Left</string>
       </property>
      </widget>
-     <widget class="QDoubleSpinBox" name="doubleSpinBox_9">
+     <widget class="QDoubleSpinBox" name="spin_y">
       <property name="geometry">
        <rect>
         <x>120</x>
@@ -219,7 +219,7 @@
        <string>X Lower-Left</string>
       </property>
      </widget>
-     <widget class="QDoubleSpinBox" name="doubleSpinBox_11">
+     <widget class="QDoubleSpinBox" name="spin_x">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -242,7 +242,7 @@
        <string>Z-rotation</string>
       </property>
      </widget>
-     <widget class="QDoubleSpinBox" name="doubleSpinBox_10">
+     <widget class="QDoubleSpinBox" name="spin_z">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -265,7 +265,7 @@
        <string>Explore....</string>
       </property>
      </widget>
-     <widget class="QLineEdit" name="lineEdit">
+     <widget class="QLineEdit" name="txt_modflow_path">
       <property name="geometry">
        <rect>
         <x>110</x>
@@ -275,7 +275,7 @@
        </rect>
       </property>
      </widget>
-     <widget class="QPushButton" name="btn_explore_folder_11">
+     <widget class="QPushButton" name="btn_explore_modflow">
       <property name="geometry">
        <rect>
         <x>110</x>
@@ -304,7 +304,7 @@
      <property name="frameShadow">
       <enum>QFrame::Shadow::Raised</enum>
      </property>
-     <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_12">
+     <widget class="QgsMapLayerComboBox" name="cmb_field_row">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -340,7 +340,7 @@
        <string>row</string>
       </property>
      </widget>
-     <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_14">
+     <widget class="QgsMapLayerComboBox" name="cmb_field_cat">
       <property name="geometry">
        <rect>
         <x>250</x>
@@ -350,7 +350,7 @@
        </rect>
       </property>
      </widget>
-     <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_13">
+     <widget class="QgsMapLayerComboBox" name="cmb_field_col">
       <property name="geometry">
        <rect>
         <x>130</x>
@@ -386,7 +386,7 @@
        <string>Select Grid Layer</string>
       </property>
      </widget>
-     <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_24">
+     <widget class="QgsMapLayerComboBox" name="cmb_layer_malla">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -405,24 +405,11 @@
     <attribute name="title">
      <string>WEAP</string>
     </attribute>
-    <widget class="QLabel" name="label_11">
-     <property name="geometry">
-      <rect>
-       <x>200</x>
-       <y>150</y>
-       <width>111</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Pozos (txt)</string>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_10">
      <property name="geometry">
       <rect>
-       <x>30</x>
-       <y>150</y>
+       <x>20</x>
+       <y>210</y>
        <width>111</width>
        <height>20</height>
       </rect>
@@ -431,34 +418,34 @@
       <string>DemandSite Folder</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEdit_folder_3">
+    <widget class="QLineEdit" name="txt_ds_file">
      <property name="geometry">
       <rect>
-       <x>200</x>
-       <y>170</y>
-       <width>113</width>
+       <x>380</x>
+       <y>40</y>
+       <width>101</width>
        <height>21</height>
       </rect>
      </property>
     </widget>
-    <widget class="QPushButton" name="btn_explore_folder_3">
+    <widget class="QPushButton" name="btn_explore_ds">
      <property name="geometry">
       <rect>
-       <x>200</x>
-       <y>190</y>
-       <width>113</width>
-       <height>24</height>
+       <x>380</x>
+       <y>70</y>
+       <width>101</width>
+       <height>20</height>
       </rect>
      </property>
      <property name="text">
       <string>Select Ruta</string>
      </property>
     </widget>
-    <widget class="QListWidget" name="listWidget">
+    <widget class="QListWidget" name="list_widget_ds">
      <property name="geometry">
       <rect>
-       <x>30</x>
-       <y>170</y>
+       <x>20</x>
+       <y>230</y>
        <width>151</width>
        <height>91</height>
       </rect>
@@ -467,7 +454,7 @@
     <widget class="QLabel" name="label_4">
      <property name="geometry">
       <rect>
-       <x>290</x>
+       <x>240</x>
        <y>10</y>
        <width>101</width>
        <height>20</height>
@@ -477,11 +464,11 @@
       <string>Arcs</string>
      </property>
     </widget>
-    <widget class="QgsFieldComboBox" name="mFieldComboBox_3">
+    <widget class="QgsFieldComboBox" name="cmb_field_node_name">
      <property name="geometry">
       <rect>
-       <x>170</x>
-       <y>80</y>
+       <x>120</x>
+       <y>100</y>
        <width>101</width>
        <height>21</height>
       </rect>
@@ -491,7 +478,7 @@
      <property name="geometry">
       <rect>
        <x>30</x>
-       <y>80</y>
+       <y>100</y>
        <width>101</width>
        <height>20</height>
       </rect>
@@ -500,10 +487,10 @@
       <string>Column name</string>
      </property>
     </widget>
-    <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_3">
+    <widget class="QgsMapLayerComboBox" name="cmb_layer_nodes">
      <property name="geometry">
       <rect>
-       <x>170</x>
+       <x>120</x>
        <y>40</y>
        <width>101</width>
        <height>21</height>
@@ -516,7 +503,7 @@
     <widget class="QLabel" name="label_3">
      <property name="geometry">
       <rect>
-       <x>170</x>
+       <x>120</x>
        <y>10</y>
        <width>101</width>
        <height>20</height>
@@ -526,10 +513,10 @@
       <string>Nodes</string>
      </property>
     </widget>
-    <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_4">
+    <widget class="QgsMapLayerComboBox" name="cmb_layer_arcs">
      <property name="geometry">
       <rect>
-       <x>290</x>
+       <x>240</x>
        <y>40</y>
        <width>101</width>
        <height>21</height>
@@ -539,11 +526,11 @@
       <set>Qgis::LayerFilter::LineLayer|Qgis::LayerFilter::RasterLayer</set>
      </property>
     </widget>
-    <widget class="QgsFieldComboBox" name="mFieldComboBox_4">
+    <widget class="QgsFieldComboBox" name="cmb_field_arc_name">
      <property name="geometry">
       <rect>
-       <x>290</x>
-       <y>80</y>
+       <x>240</x>
+       <y>100</y>
        <width>101</width>
        <height>21</height>
       </rect>
@@ -562,25 +549,74 @@
       <string>Layer name</string>
      </property>
     </widget>
+    <widget class="QComboBox" name="cmb_field_ds_prefix">
+     <property name="geometry">
+      <rect>
+       <x>380</x>
+       <y>100</y>
+       <width>91</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_16">
+     <property name="geometry">
+      <rect>
+       <x>380</x>
+       <y>10</y>
+       <width>111</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Pozos (txt)</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_5">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>80</y>
+       <width>101</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>(Rivers)</string>
+     </property>
+    </widget>
+    <widget class="QgsFieldComboBox" name="cmb_field_node_type">
+     <property name="geometry">
+      <rect>
+       <x>140</x>
+       <y>150</y>
+       <width>101</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_17">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>150</y>
+       <width>131</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Column with Node type</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">
      <string>Output</string>
     </attribute>
-    <widget class="QLineEdit" name="lineEdit_folder_2">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>70</y>
-       <width>113</width>
-       <height>21</height>
-      </rect>
-     </property>
-    </widget>
     <widget class="QPushButton" name="btn_run">
      <property name="geometry">
       <rect>
-       <x>330</x>
+       <x>160</x>
        <y>90</y>
        <width>75</width>
        <height>24</height>
@@ -590,7 +626,7 @@
       <string>Run</string>
      </property>
     </widget>
-    <widget class="QCheckBox" name="checkBox">
+    <widget class="QCheckBox" name="chk_run_geochecker">
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -603,36 +639,10 @@
       <string>Run Geochecker</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_9">
+    <widget class="QLineEdit" name="txt_output_folder">
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>50</y>
-       <width>141</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Geochecker Results Folder</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="btn_explore_folder_2">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>90</y>
-       <width>113</width>
-       <height>24</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Select Ruta</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="lineEdit_folder">
-     <property name="geometry">
-      <rect>
-       <x>190</x>
        <y>70</y>
        <width>113</width>
        <height>21</height>
@@ -642,7 +652,7 @@
     <widget class="QPushButton" name="btn_explore_folder">
      <property name="geometry">
       <rect>
-       <x>190</x>
+       <x>20</x>
        <y>90</y>
        <width>113</width>
        <height>24</height>
@@ -655,7 +665,7 @@
     <widget class="QLabel" name="label_7">
      <property name="geometry">
       <rect>
-       <x>190</x>
+       <x>20</x>
        <y>50</y>
        <width>101</width>
        <height>20</height>
