@@ -5,10 +5,11 @@ from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt import uic
-from qgis.core import QgsMapLayerProxyModel, QgsProject, QgsVectorLayer
-from GeoLinkage.AppKernel import AppKernel 
+from qgis.core import QgsMapLayerProxyModel, QgsProject, QgsVectorLayer, QgsMapLayerType, QgsWkbTypes
+from .GeoLinkage import AppKernel 
+from qgis.PyQt.QtCore import Qt, QTimer
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'geolinkage_dialog.ui'))
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'geo_linkage_dialog.ui'))
 
 class GeoLinkageDialog(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
@@ -17,7 +18,8 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
 
         self._setup_layer_filters()
         self._connect_signals()
-        self._populate_ds_list() # <-- Llamada a la carga de Demand Sites
+        self._populate_ds_list() 
+        QTimer.singleShot(200, self._sync_initial_layers)
         self.toggle_grid_inputs()
 
     def _setup_layer_filters(self):
@@ -35,6 +37,7 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
         self.btn_explore_folder.clicked.connect(self.select_results_folder)
         self.btn_explore_modflow.clicked.connect(self.select_modflow_file)
         self.btn_explore_ds.clicked.connect(self.select_ds_file)
+        self.btn_refresh_ds.clicked.connect(self._populate_ds_list)
         
         # 2. Evento del botón principal
         self.btn_run.clicked.connect(self.run_geolinkage)
@@ -48,6 +51,46 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
         self.cmb_layer_gw.layerChanged.connect(lambda layer: self._update_field_layer(layer, [self.cmb_field_nombre_gw]))
         self.cmb_layer_nodes.layerChanged.connect(lambda layer: self._update_field_layer(layer, [self.cmb_field_node_name, self.cmb_field_node_type]))
         self.cmb_layer_arcs.layerChanged.connect(lambda layer: self._update_field_layer(layer, [self.cmb_field_arc_name]))
+
+    def _sync_initial_layers(self):
+        """Fuerza la sincronización entre capas y campos al abrir el plugin."""
+        if self.cmb_layer_malla.currentLayer():
+            self._update_field_layer(self.cmb_layer_malla.currentLayer(), [self.cmb_field_row, self.cmb_field_col, self.cmb_field_cat])
+            
+        if self.cmb_layer_cuencas.currentLayer():
+            self._update_field_layer(self.cmb_layer_cuencas.currentLayer(), [self.cmb_field_nombre_cuenca])
+            
+        if self.cmb_layer_gw.currentLayer():
+            self._update_field_layer(self.cmb_layer_gw.currentLayer(), [self.cmb_field_nombre_gw])
+            
+        if self.cmb_layer_nodes.currentLayer():
+            self._update_field_layer(self.cmb_layer_nodes.currentLayer(), [self.cmb_field_node_name, self.cmb_field_node_type])
+            
+        if self.cmb_layer_arcs.currentLayer():
+            self._update_field_layer(self.cmb_layer_arcs.currentLayer(), [self.cmb_field_arc_name])
+
+    def _populate_ds_list(self):
+        """Busca todas las capas de polígonos en el proyecto y las añade al QListWidget."""
+        # Limpiar la lista en caso de recargas
+        self.list_widget_ds.clear() 
+        
+        # Iterar sobre todas las capas cargadas en el proyecto actual
+        layers = QgsProject.instance().mapLayers().values()
+        
+        for layer in layers:
+            # Filtrar estrictamente por capas vectoriales de tipo polígono
+            if layer.type() == QgsMapLayerType.VectorLayer and layer.geometryType() == QgsWkbTypes.PolygonGeometry:
+                item = QListWidgetItem(layer.name())
+                
+                # Habilitar el checkbox en el item
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+                item.setCheckState(Qt.CheckState.Unchecked) # Desmarcado por defecto
+                
+                # Almacenar el ID interno de la capa. Esto es vital para evitar
+                # errores si hay dos capas con el mismo nombre en QGIS.
+                item.setData(Qt.ItemDataRole.UserRole, layer.id()) 
+                
+                self.list_widget_ds.addItem(item)
 
     def _update_field_layer(self, layer, field_comboboxes):
         """Asigna la capa activa a los selectores de campos."""
@@ -241,28 +284,6 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
             QMessageBox.critical(self, "Error de Procesamiento", f"Fallo en la ejecución del backend:\n{str(e)}")
 
 
-        def _populate_ds_list(self):
-            """Busca todas las capas de polígonos en el proyecto y las añade al QListWidget."""
-            # Limpiar la lista en caso de recargas
-            self.list_widget_ds.clear() 
-            
-            # Iterar sobre todas las capas cargadas en el proyecto actual
-            layers = QgsProject.instance().mapLayers().values()
-            
-            for layer in layers:
-                # Filtrar estrictamente por capas vectoriales de tipo polígono
-                if layer.type() == QgsMapLayerType.VectorLayer and layer.geometryType() == QgsWkbTypes.PolygonGeometry:
-                    item = QListWidgetItem(layer.name())
-                    
-                    # Habilitar el checkbox en el item
-                    item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-                    item.setCheckState(Qt.Unchecked) # Desmarcado por defecto
-                    
-                    # Almacenar el ID interno de la capa. Esto es vital para evitar
-                    # errores si hay dos capas con el mismo nombre en QGIS.
-                    item.setData(Qt.UserRole, layer.id()) 
-                    
-                    self.list_widget_ds.addItem(item)
 
 class GeoLinkagePlugin:
     def __init__(self, iface):
