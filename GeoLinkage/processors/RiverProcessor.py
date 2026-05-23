@@ -1,10 +1,10 @@
 import time
 from collections import namedtuple
 from qgis.core import QgsVectorLayer, QgsFeature, QgsField, QgsSpatialIndex
-from PyQt5.QtCore import QVariant
+from qgis.PyQt.QtCore import QVariant
 
-from processors.FeatureProcessor import FeatureProcess
-from utils.RiverNode import RiverNode
+from .FeatureProcessor import FeatureProcess
+from ..utils.RiverNode import RiverNode
 
 
 class RiverProcess(FeatureProcess):

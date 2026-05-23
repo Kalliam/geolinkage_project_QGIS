@@ -112,9 +112,6 @@
        <height>21</height>
       </rect>
      </property>
-     <property name="filters">
-      <set>Qgis::LayerFilter::PolygonLayer|Qgis::LayerFilter::TiledSceneLayer</set>
-     </property>
     </widget>
     <widget class="QgsMapLayerComboBox" name="cmb_layer_gw">
      <property name="geometry">
@@ -124,9 +121,6 @@
        <width>101</width>
        <height>21</height>
       </rect>
-     </property>
-     <property name="filters">
-      <set>Qgis::LayerFilter::PolygonLayer|Qgis::LayerFilter::TiledSceneLayer</set>
      </property>
     </widget>
     <widget class="QLabel" name="label">
@@ -386,19 +380,16 @@
        <string>Select Grid Layer</string>
       </property>
      </widget>
-     <widget class="QgsMapLayerComboBox" name="cmb_layer_malla">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>30</y>
-        <width>160</width>
-        <height>27</height>
-       </rect>
-      </property>
-      <property name="filters">
-       <set>Qgis::LayerFilter::PolygonLayer</set>
-      </property>
-     </widget>
+      <widget class="QgsMapLayerComboBox" name="cmb_layer_malla">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>160</width>
+         <height>27</height>
+        </rect>
+       </property>
+      </widget>
     </widget>
    </widget>
    <widget class="QWidget" name="tab_3">
@@ -487,19 +478,16 @@
       <string>Column name</string>
      </property>
     </widget>
-    <widget class="QgsMapLayerComboBox" name="cmb_layer_nodes">
-     <property name="geometry">
-      <rect>
-       <x>170</x>
-       <y>40</y>
-       <width>101</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="filters">
-      <set>Qgis::LayerFilter::PointLayer</set>
-     </property>
-    </widget>
+     <widget class="QgsMapLayerComboBox" name="cmb_layer_nodes">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>40</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+     </widget>
     <widget class="QLabel" name="label_3">
      <property name="geometry">
       <rect>
@@ -513,19 +501,16 @@
       <string>Nodes</string>
      </property>
     </widget>
-    <widget class="QgsMapLayerComboBox" name="cmb_layer_arcs">
-     <property name="geometry">
-      <rect>
-       <x>290</x>
-       <y>40</y>
-       <width>101</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="filters">
-      <set>Qgis::LayerFilter::LineLayer|Qgis::LayerFilter::RasterLayer</set>
-     </property>
-    </widget>
+     <widget class="QgsMapLayerComboBox" name="cmb_layer_arcs">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>40</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+     </widget>
     <widget class="QgsFieldComboBox" name="cmb_field_arc_name">
      <property name="geometry">
       <rect>

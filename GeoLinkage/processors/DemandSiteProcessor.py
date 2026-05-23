@@ -3,7 +3,7 @@ from collections import namedtuple
 
 from qgis.core import QgsFeature, QgsVectorLayer
 
-from processors.FeatureProcessor import FeatureProcess
+from .FeatureProcessor import FeatureProcess
 
 
 class DemandSiteProcess(FeatureProcess):

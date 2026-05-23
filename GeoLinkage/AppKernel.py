@@ -1,16 +1,16 @@
 import time
 
 from qgis.core import QgsField
-from PyQt5.QtCore import QVariant
+from qgis.PyQt.QtCore import QVariant
 
-from processors.CatchmentProcessor import CatchmentProcess
-from processors.DemandSiteProcessor import DemandSiteProcess
-from processors.GroundwaterProcessor import GroundwaterProcess
-from postprocessors.GeoChecker import GeoChecker
-from postprocessors.SuperpositionCheck import SuperpositionCheck
-from processors.RiverProcessor import RiverProcess
-from  utils.Visualizer import *
-import GeoLinkage.settings
+from .postprocessors.GeoChecker import GeoChecker
+from .processors.CatchmentProcessor import CatchmentProcess
+from .processors.DemandSiteProcessor import DemandSiteProcess
+from .processors.GroundwaterProcessor import GroundwaterProcess
+from .postprocessors.SuperpositionCheck import SuperpositionCheck
+from .processors.RiverProcessor import RiverProcess
+from  .utils.Visualizer import *
+from . import settings
 
 class AppKernel():
     """

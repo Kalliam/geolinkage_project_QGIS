@@ -3,7 +3,7 @@ from collections import namedtuple
 
 from qgis.core import QgsVectorLayer
 
-from processors.FeatureProcessor import FeatureProcess
+from .FeatureProcessor import FeatureProcess
 
 
 class GroundwaterProcess(FeatureProcess):

@@ -1,6 +1,6 @@
-from postprocessors.Check import Check
-from utils.Visualizer import Visualizer
-from GeoLinkage.settings import NODE_TYPE_ID
+from .Check import Check
+from ..utils.Visualizer import Visualizer
+from ..settings import NODE_TYPE_ID
 import numpy as np
 
 class SuperpositionCheck(Check):

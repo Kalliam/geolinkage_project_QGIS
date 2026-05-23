@@ -1,6 +1,4 @@
-from utils.SummaryInfo import SummaryInfo
-from utils.Errors import ErrorManager
-from utils.Visualizer import Visualizer
+from ..utils.Visualizer import Visualizer
 
 class GeoChecker:
     """
