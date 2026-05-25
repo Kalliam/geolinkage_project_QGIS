@@ -236,25 +236,25 @@ class AppKernel():
         # Catchments Logic
         # -------------------------------------------------------------------------------
         # import files to vector maps
-        self.catchment_processor.run(grid_layer, **layers_dict['catchment'])
+        self.catchment_processor.run(grid_layer, **layers_dict['catchment'], **layers_dict['grid'])
 
         # -------------------------------------------------------------------------------
         # GWS Logic
         # -------------------------------------------------------------------------------
         # import files to vector maps
-        self.groundwater_processor.run(grid_layer, **layers_dict['gw'])
+        self.groundwater_processor.run(grid_layer, **layers_dict['gw'], **layers_dict['grid'])
 
         # -------------------------------------------------------------------------------
         # Demand Sites Logic
         # -------------------------------------------------------------------------------
         # import files to vector maps
-        self.demand_site_processor.run(grid_layer, **layers_dict['ds'])
+        self.demand_site_processor.run(grid_layer, **layers_dict['ds'], **layers_dict['grid'])
 
         # -------------------------------------------------------------------------------
         # Rivers Logic
         # -------------------------------------------------------------------------------
         # import files to vector maps
-        self.river_processor.run(grid_layer, **layers_dict['river'])
+        self.river_processor.run(grid_layer, **layers_dict['river'], **layers_dict['grid'])
 
         # -------------------------------------------------------------------------------
         # General and Results Logic

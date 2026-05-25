@@ -1,4 +1,5 @@
 import time
+import os
 from collections import namedtuple
 
 from qgis.core import QgsFeature, QgsVectorLayer
@@ -229,29 +230,25 @@ class DemandSiteProcess(FeatureProcess):
             
 
 
-    def read_well_files(self, path_archivo_txt):
-
+def read_well_files(self, path_archivo_txt):
         nombres_pozos = []
+        # Si no se proporciona archivo (None), se retorna la lista vacía para no interrumpir el procesador.
+        if not path_archivo_txt:
+            return nombres_pozos
+
         try:
             with open(path_archivo_txt, 'r', encoding='utf-8', errors='replace') as file:
                 lineas = file.readlines()
                 
                 # 2. El trabajo de la función antigua '_read_well_files' (Parseo)
                 for linea in lineas:
-                    nombre = linea.strip() # Quita espacios y saltos de línea
-                    
-                    # Si la línea no está vacía y no es un comentario
+                    nombre = linea.strip() 
                     if nombre and not nombre.startswith('#'):
                         nombres_pozos.append(nombre)
                         
         except Exception as e:
-            # En QGIS, arrojamos el error para que la GUI lo atrape y muestre un popup rojo
-            raise ValueError(f"Error al leer el archivo de pozos [{path_archivo_txt}]. Detalle: {e}")
-            
-        if not nombres_pozos:
-            # Opcional: Puedes decidir si esto es un error fatal (raise) o un aviso.
-            # Si un modelo puede correr sin pozos, podrías simplemente retornar la lista vacía.
-            raise ValueError(f"El archivo de pozos [{path_archivo_txt}] está vacío o sin datos válidos.")
+            # El error solo se lanza si el usuario proveyó una ruta pero el archivo es ilegible.
+            raise ValueError(f"Error de E/S en el archivo de pozos [{path_archivo_txt}]: {e}")
             
         return nombres_pozos
 

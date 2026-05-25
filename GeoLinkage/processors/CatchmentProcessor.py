@@ -103,7 +103,8 @@ class CatchmentProcess(FeatureProcess):
 
     def __init__(self, debug: bool = False):
         super().__init__(debug=debug)
-
+        self._catchment_names = set()
+    
     def run(self, grid_layer, catchment_layer, col_name, col_row, col_col, col_cat):
         ts = time.time()
 
@@ -161,4 +162,5 @@ class CatchmentProcess(FeatureProcess):
             }
 
             cell = Cell(area_row, area_col)
+            self._catchment_names.add(feature_name)
             self._set_cell(cell, feature_name, data, by_field='area')

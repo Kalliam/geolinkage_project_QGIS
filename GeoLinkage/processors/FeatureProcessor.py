@@ -143,8 +143,16 @@ class FeatureProcess(metaclass=ABCMeta):
             self.cells[cell][area_name] = data
 
     #ordena las celdas procesadas y las guarda en otro arreglo
-    def _set_cell_by_criteria(self, criteria_func, by_field='area'):
+    def _set_cell_by_criteria(self, criteria_func=None, by_field='area'):
         # watch what is the best area by criteria for a cell
+        if criteria_func is None:
+            # Ordena los datos de la celda de mayor a menor basándose en 'by_field'
+            criteria_func = lambda c, all_cells, by_field: sorted(
+                all_cells[c].values(), 
+                key=lambda item: item.get(by_field, 0), 
+                reverse=True
+            )
+
         for cell in self.cells:
             area_targets_ordered = criteria_func(cell, self.cells, by_field=by_field)
 

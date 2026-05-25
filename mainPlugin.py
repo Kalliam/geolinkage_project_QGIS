@@ -6,7 +6,7 @@ from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.core import QgsMapLayerProxyModel, QgsProject, QgsVectorLayer, QgsMapLayerType, QgsWkbTypes
-from .GeoLinkage import AppKernel 
+from .GeoLinkage.AppKernel import AppKernel 
 from qgis.PyQt.QtCore import Qt, QTimer
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'geo_linkage_dialog.ui'))
@@ -249,7 +249,7 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
                     'col_node_type': self.cmb_field_node_type.currentText()
                 }
 
-            # 5. Extracción de Sitios de Demanda (Demand Sites - Capas múltiples + TXT)
+            # 5. Extracción de Sitios de Demanda (Demand Sites)
             capas_ds_seleccionadas = []
             for i in range(self.list_widget_ds.count()):
                 item = self.list_widget_ds.item(i)
@@ -261,19 +261,19 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
 
             archivo_pozos_txt = self.txt_ds_file.text()
 
-            if capas_ds_seleccionadas or archivo_pozos_txt:
-                data_payload['ds'] = {
-                    'wells_file_path': archivo_pozos_txt if archivo_pozos_txt else None,
-                    'demand_site_layers': capas_ds_seleccionadas,
-                    'col_name': self.cmb_field_ds_prefix.currentText() if hasattr(self, 'cmb_field_ds_prefix') else 'DS'
-                }
-
+            # ELIMINAR EL IF. El nodo 'ds' se inyecta siempre.
+            data_payload['ds'] = {
+                'wells_file_path': archivo_pozos_txt if archivo_pozos_txt else None,
+                'demand_site_layers': capas_ds_seleccionadas,
+                # Nota: Veremos el cambio de .currentText() a .text() en el siguiente punto
+                'col_name': self.txt_ds_prefix.text() 
+            }
             # 6. INSTANCIACIÓN Y EJECUCIÓN SEGURA DEL BACKEND
             kernel = AppKernel(debug=True)
             
             kernel.run(
                 grid_layer=capa_malla_resuelta, 
-                data_payload=data_payload,
+                layers_dict=data_payload,
                 output_path=ruta_salida,
                 run_geochecker=run_geochecker
             )
@@ -281,8 +281,9 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
             QMessageBox.information(self, "Éxito", "El procesamiento de GeoLinkage ha concluido correctamente.")
 
         except Exception as e:
+            import traceback
+            traceback.print_exc() # Esto fuerza a Python a imprimir las líneas rojas en la consola
             QMessageBox.critical(self, "Error de Procesamiento", f"Fallo en la ejecución del backend:\n{str(e)}")
-
 
 
 class GeoLinkagePlugin:
