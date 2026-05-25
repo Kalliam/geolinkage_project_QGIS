@@ -134,7 +134,7 @@ class RiverProcess(FeatureProcess):
         self.root = None
 
     #@TimerSummary.timeit
-    def run(self, grid_layer, river_layer, node_layer, col_river, col_segment, col_node_type, col_node_name, col_row, col_col, col_cat):
+    def run(self, grid_layer, river_layer, node_layer, col_river_name, col_node_type, col_node_name, col_row, col_col, col_cat):
         # Utils.show_title(msg_title='RIVERS', title_color=ui.green)
         ts = time.time()
 
@@ -143,7 +143,7 @@ class RiverProcess(FeatureProcess):
             node_layer=node_layer,
             col_node_type=col_node_type,
             col_node_name=col_node_name,
-            col_river_name=col_river
+            col_river_name=col_river_name  # variable corregida
         )
 
         # 2. Intersección con la Malla
