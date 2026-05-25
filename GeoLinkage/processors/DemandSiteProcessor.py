@@ -147,23 +147,28 @@ class DemandSiteProcess(FeatureProcess):
         super().__init__(debug=debug)
 
     #@TimerSummary.timeit
-    def run(self, grid_layer, well_layer, area_layers_list, col_name, col_row, col_col, col_cat, wells_txt_path):
+    def run(self, grid_layer, well_layer, area_layers_list, col_name, col_row, col_col, col_cat, wells_txt_path, col_well_name=None):        
         ts = time.time()
 
         # 1. Leer los nombres de los pozos desde el archivo de texto
         well_names = self.read_well_files(wells_txt_path)
 
         # 2. Procesar los POZOS (Puntos)
-        _err_well, inter_well_layer = self.inter_map_with_linkage(well_layer, grid_layer, col_name)
+        if well_layer is not None and col_well_name is not None:
+            _err_well, inter_well_layer = self.inter_map_with_linkage(well_layer, grid_layer, col_well_name)
 
-        if not _err_well:
-            self.process_intersection(
-                inter_layer=inter_well_layer,
-                map_name=well_layer.name(),
-                col_name=col_name, col_row=col_row, col_col=col_col, col_cat=col_cat,
-                well_names=well_names,
-                is_well=True
-            )
+            if not _err_well:
+                self.process_intersection(
+                    inter_layer=inter_well_layer,
+                    map_name=well_layer.name(),
+                    col_name=col_well_name,
+                    col_row=col_row, col_col=col_col, col_cat=col_cat,
+                    well_names=well_names,
+                    is_well=True
+                )
+        else:
+            # Bypass si no hay capa de puntos
+            pass
 
         # 3. Procesar las ÁREAS (Polígonos secundarios)
         # Recorremos la lista de Shapefiles de áreas que el usuario subió (si es que subió alguna)
@@ -195,6 +200,12 @@ class DemandSiteProcess(FeatureProcess):
 
         for feature in inter_layer.getFeatures():
             feature_name = feature[col_name]
+            # Extraccion del Nombre
+            try:
+                feature_name = feature[col_name]
+            except KeyError:
+                # Si 'col_name' es un prefijo estático (ej. 'DS'), se crea un ID único
+                feature_name = f"{col_name}_{map_name}_{feature.id()}"
             
             # 1. Validación exclusiva para Pozos:
             # Si estamos procesando pozos, ignoramos el punto si no está en la lista del TXT
@@ -230,7 +241,7 @@ class DemandSiteProcess(FeatureProcess):
             
 
 
-def read_well_files(self, path_archivo_txt):
+    def read_well_files(self, path_archivo_txt):
         nombres_pozos = []
         # Si no se proporciona archivo (None), se retorna la lista vacía para no interrumpir el procesador.
         if not path_archivo_txt:

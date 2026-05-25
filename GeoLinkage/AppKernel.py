@@ -248,8 +248,20 @@ class AppKernel():
         # Demand Sites Logic
         # -------------------------------------------------------------------------------
         # import files to vector maps
-        self.demand_site_processor.run(grid_layer, **layers_dict['ds'], **layers_dict['grid'])
+        if 'ds' in layers_dict:
+            # capa de nodos del esquema del rio para usarla como pozos
+            capa_nodos = layers_dict.get('river', {}).get('node_layer')
+            col_nodos_nombre = layers_dict.get('river', {}).get('col_node_name')
 
+            self.demand_site_processor.run(
+                grid_layer=grid_layer,
+                well_layer=capa_nodos,                      
+                col_well_name=col_nodos_nombre,               
+                area_layers_list=layers_dict['ds']['demand_site_layers'],  
+                wells_txt_path=layers_dict['ds']['wells_file_path'],       
+                col_name=layers_dict['ds']['col_name'],
+                **layers_dict['grid']                                     
+            )
         # -------------------------------------------------------------------------------
         # Rivers Logic
         # -------------------------------------------------------------------------------
