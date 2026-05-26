@@ -1,5 +1,5 @@
 from anytree import Node, RenderTree, NodeMixin, AsciiStyle
-from anytree.search import find_by_attr
+from anytree.search import find_by_attr, findall_by_attr
 
 
 class RiverNode(NodeMixin):
@@ -218,7 +218,18 @@ class RiverNode(NodeMixin):
     def set_main_river(self, river_id, river_name, river_cat, river_distance):
         # make a node representing main river (parent river)
         # if not self.parent == self.root_node:
-        main_river = find_by_attr(self.root_node, name="node_id", value=river_id)
+        # Búsqueda tolerante a duplicados topológicos
+        coincidencias = findall_by_attr(self.root_node, name="node_id", value=river_id)
+        
+        if not coincidencias:
+            main_river = None
+        else:
+            # Selecciona defensivamente el primer nodo encontrado, ignorando los duplicados
+            main_river = coincidencias[0]
+            
+            # Opcional: Imprimir una advertencia en consola si hay duplicados
+            if len(coincidencias) > 1:
+                print(f"ADVERTENCIA: Se encontraron {len(coincidencias)} nodos duplicados con el ID {river_id}. Usando el primero.")
 
         if not main_river:
             _river_type = 13
@@ -254,11 +265,27 @@ class RiverNode(NodeMixin):
         for child_node in self.children:
             segment = child_node.get_break_input_by_river()
 
-            segments += segment
+            if segment is not None:
+                segments.append(segment)
 
         self.river_segments = segments
 
         return segments
+    def get_break_input_by_river(self):
+        # Si el nodo no está sobre un río, no genera corte
+        if self.is_root or not self.main_river_distance:
+            return None
+            
+        segment_data = {
+            'break_name': f"{self.main_river_name}_{self.node_name}",
+            'river_id': self.main_river_id,
+            'river_name': self.main_river_name,
+            'river_cat': self.main_river_cat,
+            'distance': self.main_river_distance,
+            'type': self.node_type
+        }
+        
+        return segment_data
 
     def get_segments_format(self, river_node_id=None):
         if river_node_id:

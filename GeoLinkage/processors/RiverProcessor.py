@@ -288,8 +288,7 @@ class RiverProcess(FeatureProcess):
             # Le preguntamos al árbol: "¿En cuántos pedazos se divide este río y a qué distancias?"
             # Supongamos que el árbol nos dice: "Se divide en 2: de 0m a 400m, y de 400m a 1000m"
             
-            river_segments = self.get_river_segments_from_tree(feature_river) 
-
+            river_segments = self.get_river_segments_from_tree(feature_river, col_river_name)
             
             for segment in river_segments:
                 dist_start = segment['start_distance']
@@ -315,17 +314,14 @@ class RiverProcess(FeatureProcess):
 
         return segmented_layer
 
-    def get_river_segments_from_tree(self, feature_river):
-        """
-        Obtiene los segmentos reales generados por RiverNode.
-        """
+    def get_river_segments_from_tree(self, feature_river, col_river_name):
         # Suponiendo que armaste el árbol en self.root en pasos anteriores
         # Solo necesitamos filtrar los segmentos que pertenezcan a este río específico
         all_segments = self.root.get_segments_list()
         
         # Filtramos por el nombre del río (asumiendo que feature_river['river_name'] existe)
         # Ajusta el nombre de la columna según corresponda en tu capa
-        river_name = feature_river['nombre_de_la_columna_rio'] 
+        river_name = feature_river['col_river_name'] 
         
         return [seg for seg in all_segments if seg['river_name'] == river_name]
 
