@@ -125,11 +125,20 @@ class AppKernel():
     #     self.geo_checker.setup(consolidate_cells=self.consolidate_cells, arcs=self.geo_processor.arcs, nodes=self.geo_processor.nodes)
     #     self.geo_checker.run()
 
-    def consolidate_grid_attributes(self, grid_layer):
+    def consolidate_grid_attributes(self, grid_layer, layers_dict):
         """
         Toma los datos procesados de todas las entidades y los escribe 
         en la tabla de atributos de la capa de la malla.
         """
+        # Extraccion de nombres
+        nombre_mapa_gw = layers_dict.get('gw', {}).get('gw_layer').name() if 'gw' in layers_dict else None
+        nombre_mapa_catchment = layers_dict.get('catchment', {}).get('catchment_layer').name() if 'catchment' in layers_dict else None
+        nombre_mapa_river = layers_dict.get('river', {}).get('river_layer').name() if 'river' in layers_dict else None
+        
+        # Nota: Para Sitios de Demanda, las áreas son una lista. Dependiendo de cómo programaste 
+        # format_cell_data_for_export, puede que necesites enviar None o un identificador estático.
+        nombre_mapa_ds = "DS_Layer"
+
 
         # 1. Definir la estructura de columnas exacta que exige WEAP/MODFLOW
         # Ajusta los nombres de las llaves ('CATCH', 'DS1', etc.) según tus settings.py
@@ -178,9 +187,9 @@ class AppKernel():
             # Nota: Necesitarás tener guardados los map_name que se usaron en el run()
             
             # Ejemplo para Groundwater
-            if self.groundwater_processor:
+            if self.groundwater_processor and nombre_mapa_gw:
                 datos_gw = self.groundwater_processor.format_cell_data_for_export(
-                    cell=celda_actual, map_name=self.nombre_mapa_gw, 
+                    cell=celda_actual, map_name=nombre_mapa_gw, # sin el 'self.'
                     export_column_names=columnas_exportacion['gw']
                 )
                 atributos_celda.update(datos_gw)
@@ -188,7 +197,7 @@ class AppKernel():
             # Ejemplo para Catchment
             if self.catchment_processor:
                 datos_catchment = self.catchment_processor.format_cell_data_for_export(
-                    cell=celda_actual, map_name=self.nombre_mapa_catchment, 
+                    cell=celda_actual, map_name=nombre_mapa_catchment, 
                     export_column_names=columnas_exportacion['catchment']
                 )
                 atributos_celda.update(datos_catchment)
@@ -196,7 +205,7 @@ class AppKernel():
             # Ejemplo para Ríos
             if self.river_processor:
                 datos_river = self.river_processor.format_cell_data_for_export(
-                    cell=celda_actual, map_name=self.nombre_mapa_river, 
+                    cell=celda_actual, map_name=nombre_mapa_river, 
                     export_column_names=columnas_exportacion['river']
                 )
                 atributos_celda.update(datos_river)
@@ -204,7 +213,7 @@ class AppKernel():
             # Ejemplo para Sitios de Demanda (Pozos)
             if self.demand_site_processor:
                 datos_ds = self.demand_site_processor.format_cell_data_for_export(
-                    cell=celda_actual, map_name=self.nombre_mapa_ds, 
+                    cell=celda_actual, map_name=nombre_mapa_ds, 
                     export_column_names=columnas_exportacion['ds'],
                     is_demand_site=True
                 )
@@ -273,11 +282,12 @@ class AppKernel():
         # -------------------------------------------------------------------------------
         # make a linkage map copy and format with the base linkage cols
 
-        self.consolidate_grid_attributes(grid_layer)
+        self.consolidate_grid_attributes(grid_layer, layers_dict)
 
         ## no implementado aun
         if run_geochecker:
-            self.run_geo_checker(output_path)
+            #self.run_geo_checker(output_path)
+            print("GeoChecker esta desactivado temporalmente.")
 
 
         te = time.time()

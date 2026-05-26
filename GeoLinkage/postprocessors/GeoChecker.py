@@ -119,8 +119,6 @@ class GeoChecker:
         self.cells = None
 
         self.config = config
-        self.error = ErrorManager(config)
-        self.summary = SummaryInfo('geo_check', self.error, config)
         self.visualizer = Visualizer()
         self.folder_path = None
 

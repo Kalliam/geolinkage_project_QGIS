@@ -321,7 +321,7 @@ class RiverProcess(FeatureProcess):
         
         # Filtramos por el nombre del río (asumiendo que feature_river['river_name'] existe)
         # Ajusta el nombre de la columna según corresponda en tu capa
-        river_name = feature_river['col_river_name'] 
+        river_name = feature_river[col_river_name] 
         
         return [seg for seg in all_segments if seg['river_name'] == river_name]
 
