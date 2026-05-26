@@ -199,7 +199,6 @@ class DemandSiteProcess(FeatureProcess):
         Cell = namedtuple('Cell_ds', ['row', 'col'])
 
         for feature in inter_layer.getFeatures():
-            feature_name = feature[col_name]
             # Extraccion del Nombre
             try:
                 feature_name = feature[col_name]
@@ -232,9 +231,6 @@ class DemandSiteProcess(FeatureProcess):
                 'map_name': map_name
             }
 
-            cell = Cell(area_row, area_col)
-
-            # Inyectar los datos a la matriz de celdas
             cell = Cell(area_row, area_col)
 
             self._set_cell(cell, feature_name, data, by_field=criteria)

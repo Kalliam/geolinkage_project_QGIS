@@ -1,6 +1,6 @@
 import time
 from collections import namedtuple
-from qgis.core import QgsVectorLayer, QgsFeature, QgsField, QgsSpatialIndex
+from qgis.core import QgsVectorLayer, QgsFeature, QgsField, QgsSpatialIndex, QgsGeometry
 from qgis.PyQt.QtCore import QVariant
 
 from .FeatureProcessor import FeatureProcess
@@ -181,6 +181,8 @@ class RiverProcess(FeatureProcess):
         Reconstruye el árbol de RiverNode leyendo directamente desde QGIS y calculando
         las distancias de los nodos a lo largo de las líneas de los ríos.
         """
+        # Limpiar la variable de clase compartida para evitar datos residuales entre ejecuciones
+        RiverNode.segments_list = {}
         self.root = RiverNode(node_id=-1, node_name='root', node_type=0, node_distance=0)
 
         # 1. Crear un Índice Espacial de los Ríos para búsquedas ultra rápidas
@@ -299,8 +301,22 @@ class RiverProcess(FeatureProcess):
                     dist_end = segment['end_distance']
                 
                 # LA MAGIA DE QGIS: Cortar la línea matemáticamente
-                cut_geometry = feature_river.geometry().curveSubstring(dist_start, dist_end)
-               
+                # 1. Extraer el contenedor genérico
+                geom_original = feature_river.geometry()
+                
+                # 2. Extracción defensiva de la primitiva: 
+                # Abordamos el caso de que la línea venga empaquetada como MultiLineString
+                if geom_original.isMultipart():
+                    # Extrae la primera (y presumiblemente única) curva del conjunto
+                    curva_base = geom_original.constGet().geometryN(0)
+                else:
+                    curva_base = geom_original.constGet()
+                
+                # 3. Ejecutar el corte matemático sobre el objeto QgsCurve subyacente
+                curva_cortada = curva_base.curveSubstring(dist_start, dist_end)
+                
+                # 4. Re-empaquetar la nueva curva en un contenedor QgsGeometry válido
+                cut_geometry = QgsGeometry(curva_cortada)               
                 # Empaquetar el nuevo pedazo con su nombre
                 new_feature = QgsFeature(segmented_layer.fields())
                 new_feature.setGeometry(cut_geometry)
@@ -315,15 +331,38 @@ class RiverProcess(FeatureProcess):
         return segmented_layer
 
     def get_river_segments_from_tree(self, feature_river, col_river_name):
-        # Suponiendo que armaste el árbol en self.root en pasos anteriores
-        # Solo necesitamos filtrar los segmentos que pertenezcan a este río específico
-        all_segments = self.root.get_segments_list()
-        
-        # Filtramos por el nombre del río (asumiendo que feature_river['river_name'] existe)
-        # Ajusta el nombre de la columna según corresponda en tu capa
+        all_nodes = self.root.get_segments_list()
         river_name = feature_river[col_river_name] 
         
-        return [seg for seg in all_segments if seg['river_name'] == river_name]
+        # 1. Filtrar los puntos de corte que pertenecen a este río
+        nodos_del_rio = [nodo for nodo in all_nodes if nodo['river_name'] == river_name]
+        
+        # 2. Ordenar los cortes aguas abajo (desde la cabecera hacia la desembocadura)
+        nodos_del_rio.sort(key=lambda x: x['distance'])
+        
+        segmentos_finales = []
+        distancia_actual = 0.0
+        
+        # 3. Construir los rangos de los sub-segmentos
+        for nodo in nodos_del_rio:
+            segmentos_finales.append({
+                'river_name': river_name,
+                'segment_break_name': nodo['break_name'],
+                'start_distance': distancia_actual,
+                'end_distance': nodo['distance']
+            })
+            # El fin de este segmento es el inicio del siguiente
+            distancia_actual = nodo['distance']
+            
+        # 4. Añadir el tramo de cierre (desde el último nodo hasta el final del río)
+        segmentos_finales.append({
+            'river_name': river_name,
+            'segment_break_name': f"{river_name}_Final", 
+            'start_distance': distancia_actual,
+            'end_distance': None # None le indica a curveSubstring que vaya hasta el extremo final
+        })
+        
+        return segmentos_finales
 
     # @main_task
     ## procesa la interseccion del mapa de rios con la malla de MODFLOW
@@ -351,8 +390,6 @@ class RiverProcess(FeatureProcess):
                 'name': f"{river_name},{segment_name}",
                 'map_name': map_name
             }
-
-            cell = Cell(area_row, area_col)
 
             cell = Cell(area_row, area_col)
             self._set_cell(cell, river_name, data, by_field="length")

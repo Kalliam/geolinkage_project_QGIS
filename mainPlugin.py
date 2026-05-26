@@ -3,11 +3,10 @@ import tempfile
 import uuid
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt import uic
 from qgis.core import QgsMapLayerProxyModel, QgsProject, QgsVectorLayer, QgsMapLayerType, QgsWkbTypes
-from .GeoLinkage.AppKernel import AppKernel 
-from qgis.PyQt.QtCore import Qt, QTimer
+from .GeoLinkage.AppKernel import AppKernel
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'geo_linkage_dialog.ui'))
 
