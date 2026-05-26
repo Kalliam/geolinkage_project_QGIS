@@ -1,7 +1,8 @@
 import time
+import os
 from collections import namedtuple
 
-from qgis.core import QgsField
+from qgis.core import QgsField, QgsVectorFileWriter
 from qgis.PyQt.QtCore import QVariant
 
 from .postprocessors.GeoChecker import GeoChecker
@@ -298,6 +299,32 @@ class AppKernel():
         # make a linkage map copy and format with the base linkage cols
 
         self.consolidate_grid_attributes(grid_layer, layers_dict)
+
+        # EXPORTACION AL DISCO 
+        
+        # Construir la ruta final del archivo
+        archivo_salida = os.path.join(output_path, "linkage_final.shp")
+        
+        # Configurar motor de escritura vectorial de QGIS 3
+        opciones = QgsVectorFileWriter.SaveVectorOptions()
+        opciones.driverName = "ESRI Shapefile"
+        opciones.fileEncoding = "UTF-8"
+        
+        # Ejecutar la clonación al disco (Captura segura de la tupla)
+        resultado_escritura = QgsVectorFileWriter.writeAsVectorFormatV3(
+            layer=grid_layer,
+            fileName=archivo_salida,
+            transformContext=grid_layer.transformContext(),
+            options=opciones
+        )
+        
+        # Extraer estrictamente los dos primeros valores ignorando el resto
+        codigo_error = resultado_escritura[0]
+        mensaje = resultado_escritura[1]
+        
+        if codigo_error != QgsVectorFileWriter.NoError:
+            raise IOError(f"Error crítico en la capa I/O. No se pudo guardar el archivo final en la ruta de salida: {mensaje}")
+        # =================================================
 
         ## no implementado aun
         if run_geochecker:
