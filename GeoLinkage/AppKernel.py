@@ -1,7 +1,6 @@
 import time
 import os
 from collections import namedtuple
-
 from qgis.core import QgsField, QgsVectorFileWriter
 from qgis.PyQt.QtCore import QVariant
 
@@ -201,39 +200,36 @@ class AppKernel():
 
             atributos_celda = {}
 
-            # Groundwater
-            if nombre_mapa_gw:
-                datos_gw = self.groundwater_processor.get_data_to_save(
-                    cell=celda_actual, map_name=nombre_mapa_gw,
-                    export_column_names=columnas_exportacion['gw']
-                )
-                atributos_celda.update(datos_gw)
+# -------------------------------------------------------------------------
+            # EXTRACCIÓN DIRECTA Y A PRUEBA DE FALLOS
+            # -------------------------------------------------------------------------
+            
+            # 1. Groundwater
+            if self.groundwater_processor:
+                gw_celda = self.groundwater_processor.cell_ids.get(celda_actual)
+                if gw_celda and gw_celda.get('data'):
+                    atributos_celda[columnas_exportacion['gw'][0]] = str(gw_celda['data'][0].get('name', ''))
 
-            # Catchment
-            if nombre_mapa_catchment:
-                datos_catchment = self.catchment_processor.get_data_to_save(
-                    cell=celda_actual, map_name=nombre_mapa_catchment, 
-                    export_column_names=columnas_exportacion['catchment']
-                )
-                atributos_celda.update(datos_catchment)
+            # 2. Catchment
+            if self.catchment_processor:
+                cat_celda = self.catchment_processor.cell_ids.get(celda_actual)
+                if cat_celda and cat_celda.get('data'):
+                    atributos_celda[columnas_exportacion['catchment'][0]] = str(cat_celda['data'][0].get('name', ''))
 
-            # Ríos
-            if nombre_mapa_river:
-                datos_river = self.river_processor.get_data_to_save(
-                    cell=celda_actual, map_name=nombre_mapa_river, 
-                    export_column_names=columnas_exportacion['river']
-                )
-                atributos_celda.update(datos_river)
+            # 3. Rivers
+            if self.river_processor:
+                riv_celda = self.river_processor.cell_ids.get(celda_actual)
+                if riv_celda and riv_celda.get('data'):
+                    atributos_celda[columnas_exportacion['river'][0]] = str(riv_celda['data'][0].get('name', ''))
 
-            # Sitios de Demanda (Pozos y Áreas)
-            if nombres_mapas_ds:
-                for ds_map_name in nombres_mapas_ds:
-                    datos_ds = self.demand_site_processor.get_data_to_save(
-                        cell=celda_actual, map_name=ds_map_name, 
-                        export_column_names=columnas_exportacion['ds'],
-                        is_demand_site=True
-                    )
-                    atributos_celda.update(datos_ds)
+            # 4. Demand Sites (Soporta múltiples pozos por celda)
+            if self.demand_site_processor:
+                ds_celda = self.demand_site_processor.cell_ids.get(celda_actual)
+                if ds_celda and ds_celda.get('data'):
+                    for i, registro in enumerate(ds_celda['data']):
+                        if i < len(columnas_exportacion['ds']):
+                            col_destino = columnas_exportacion['ds'][i]
+                            atributos_celda[col_destino] = str(registro.get('name', ''))
 
             # 5. Mapear los nombres de columnas a sus índices numéricos para PyQGIS
             cambios_para_esta_celda = {}
@@ -273,18 +269,17 @@ class AppKernel():
         # Demand Sites Logic
         # -------------------------------------------------------------------------------
         if 'ds' in layers_dict:
-            # capa de nodos del esquema del rio para usarla como pozos
             capa_nodos = layers_dict.get('river', {}).get('node_layer')
             col_nodos_nombre = layers_dict.get('river', {}).get('col_node_name')
 
             self.demand_site_processor.run(
                 grid_layer=grid_layer,
-                well_layer=capa_nodos,                      
-                col_well_name=col_nodos_nombre,               
-                area_layers_list=layers_dict['ds']['demand_site_layers'],  
-                wells_txt_path=layers_dict['ds']['wells_file_path'],       
+                well_layer=capa_nodos,
+                area_layers_list=layers_dict['ds']['demand_site_layers'],
+                wells_txt_path=layers_dict['ds']['wells_file_path'],
                 col_name=layers_dict['ds']['col_name'],
-                **layers_dict['grid']                                     
+                col_well_name=col_nodos_nombre, 
+                **layers_dict['grid']
             )
 
         # -------------------------------------------------------------------------------

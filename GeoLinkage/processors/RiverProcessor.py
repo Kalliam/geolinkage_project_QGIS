@@ -392,4 +392,4 @@ class RiverProcess(FeatureProcess):
             }
 
             cell = Cell(area_row, area_col)
-            self._set_cell(cell, river_name, data, by_field="length")
+            self._set_cell(cell, data['name'], data, by_field="length")

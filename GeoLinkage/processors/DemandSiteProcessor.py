@@ -147,93 +147,47 @@ class DemandSiteProcess(FeatureProcess):
         super().__init__(debug=debug)
 
     #@TimerSummary.timeit
-    def run(self, grid_layer, well_layer, area_layers_list, col_name, col_row, col_col, col_cat, wells_txt_path, col_well_name=None):        
+    def run(self, grid_layer, well_layer, area_layers_list, wells_txt_path, col_name, col_row, col_col, col_cat, col_well_name=None):
         ts = time.time()
-
-        # 1. Leer los nombres de los pozos desde el archivo de texto
         well_names = self.read_well_files(wells_txt_path)
 
-        # 2. Procesar los POZOS (Puntos)
         if well_layer is not None and col_well_name is not None:
             _err_well, inter_well_layer = self.inter_map_with_linkage(well_layer, grid_layer, col_well_name)
-
             if not _err_well:
-                self.process_intersection(
-                    inter_layer=inter_well_layer,
-                    map_name=well_layer.name(),
-                    col_name=col_well_name,
-                    col_row=col_row, col_col=col_col, col_cat=col_cat,
-                    well_names=well_names,
-                    is_well=True
-                )
-        else:
-            # Bypass si no hay capa de puntos
-            pass
+                self.process_intersection(inter_well_layer, well_layer.name(), col_well_name, col_row, col_col, col_cat, well_names, True)
 
-        # 3. Procesar las ÁREAS (Polígonos secundarios)
-        # Recorremos la lista de Shapefiles de áreas que el usuario subió (si es que subió alguna)
         for area_layer in area_layers_list:
             _err_area, inter_area_layer = self.inter_map_with_linkage(area_layer, grid_layer, col_name)
             if not _err_area:
-                self.process_intersection(
-                    inter_layer=inter_area_layer,
-                    map_name=area_layer.name(),
-                    col_name=col_name, col_row=col_row, col_col=col_col, col_cat=col_cat,
-                    well_names=None,
-                    is_well=False
-                )
+                self.process_intersection(inter_area_layer, area_layer.name(), col_name, col_row, col_col, col_cat, None, False)
 
         self._set_cell_by_criteria(by_field='area')
-
-        te = time.time()
         self.stats['PROCESSED CELLS'] = len(self.cells)
-        self.stats['PROCESSED TIME'] = round(te - ts, 2)
-        
+        self.stats['PROCESSED TIME'] = round(time.time() - ts, 2)
         return self.stats
 
     #@main_task
     def process_intersection(self, inter_layer, map_name, col_name, col_row, col_col, col_cat, well_names=None, is_well=True):
-        """
-        Procesa los resultados tanto para Pozos (Puntos) como para Demandas de Área (Polígonos).
-        """
         Cell = namedtuple('Cell_ds', ['row', 'col'])
 
         for feature in inter_layer.getFeatures():
-            # Extraccion del Nombre
+            # Bypass para shapefiles de áreas que no poseen la columna especificada
             try:
                 feature_name = feature[col_name]
             except KeyError:
-                # Si 'col_name' es un prefijo estático (ej. 'DS'), se crea un ID único
-                feature_name = f"{col_name}_{map_name}_{feature.id()}"
+                feature_name = f"{map_name}_{feature.id()}"
             
-            # 1. Validación exclusiva para Pozos:
-            # Si estamos procesando pozos, ignoramos el punto si no está en la lista del TXT
-            if is_well and (well_names is not None) and (feature_name not in well_names):
-                continue
+            # Filtro estricto sin caracteres ocultos
+            if is_well and well_names:
+                nombres_limpios = [str(n).strip() for n in well_names if n]
+                if str(feature_name).strip() not in nombres_limpios:
+                    continue
 
-            # 2. Extracción de coordenadas de la malla
-            area_row = feature[col_row]
-            area_col = feature[col_col]
-            cell_area_id = feature[col_cat]
+            area_row, area_col, cell_area_id = feature[col_row], feature[col_col], feature[col_cat]
+            feature_area, criteria = (0, None) if is_well else (feature.geometry().area(), "area")
 
-            # 3. La Diferencia Matemática (Puntos vs Polígonos)
-            if is_well:
-                feature_area = 0  # Un pozo es un punto matemático, su área es 0
-                criteria = None   # Los pozos no compiten por espacio, simplemente se agregan (hasta 4 por celda)
-            else:
-                feature_area = feature.geometry().area() # Un área agrícola sí se calcula
-                criteria = "area" # Compiten por cuál cubre más la celda
-
-            data = {
-                'area': feature_area,
-                'cell_id': cell_area_id,
-                'name': feature_name,
-                'map_name': map_name
-            }
-
-            cell = Cell(area_row, area_col)
-
-            self._set_cell(cell, feature_name, data, by_field=criteria)
+            data = {'area': feature_area, 'cell_id': cell_area_id, 'name': feature_name, 'map_name': map_name}
+            self._set_cell(Cell(area_row, area_col), feature_name, data, by_field=criteria)
             
 
 
