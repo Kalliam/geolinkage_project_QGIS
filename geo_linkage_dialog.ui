@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>Form</class>
  <widget class="QWidget" name="Form">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -35,7 +38,7 @@
     <bool>false</bool>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <property name="movable">
     <bool>false</bool>
@@ -394,7 +397,7 @@
    </widget>
    <widget class="QWidget" name="tab_3">
     <attribute name="title">
-     <string>WEAP</string>
+     <string>WEAP/Output</string>
     </attribute>
     <widget class="QLabel" name="label_10">
      <property name="geometry">
@@ -417,6 +420,9 @@
        <width>101</width>
        <height>21</height>
       </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
     </widget>
     <widget class="QPushButton" name="btn_explore_ds">
@@ -609,52 +615,24 @@
       <string>DS</string>
      </property>
     </widget>
-   </widget>
-   <widget class="QWidget" name="tab_2">
-    <attribute name="title">
-     <string>Output</string>
-    </attribute>
-    <widget class="QPushButton" name="btn_run">
-     <property name="geometry">
-      <rect>
-       <x>160</x>
-       <y>90</y>
-       <width>75</width>
-       <height>24</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Run</string>
-     </property>
-    </widget>
-    <widget class="QCheckBox" name="chk_run_geochecker">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>20</y>
-       <width>131</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Run Geochecker</string>
-     </property>
-    </widget>
     <widget class="QLineEdit" name="txt_output_folder">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>70</y>
+       <x>340</x>
+       <y>270</y>
        <width>113</width>
        <height>21</height>
       </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
     </widget>
     <widget class="QPushButton" name="btn_explore_folder">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>90</y>
+       <x>340</x>
+       <y>290</y>
        <width>113</width>
        <height>24</height>
       </rect>
@@ -666,14 +644,40 @@
     <widget class="QLabel" name="label_7">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>50</y>
+       <x>340</x>
+       <y>250</y>
        <width>101</width>
        <height>20</height>
       </rect>
      </property>
      <property name="text">
       <string>Results Folder</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btn_run">
+     <property name="geometry">
+      <rect>
+       <x>510</x>
+       <y>300</y>
+       <width>75</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Run</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="chk_run_geochecker">
+     <property name="geometry">
+      <rect>
+       <x>340</x>
+       <y>220</y>
+       <width>131</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Run Geochecker</string>
      </property>
     </widget>
    </widget>
