@@ -1,4 +1,3 @@
-from GeoLinkage.utils.UtilMisc import UtilMisc
 import time
 import os
 from collections import namedtuple
@@ -13,7 +12,9 @@ from .postprocessors.SuperpositionCheck import SuperpositionCheck
 from .processors.RiverProcessor import RiverProcess
 from  .utils.Visualizer import *
 from .utils.UtilMisc import *
-from . import settings
+from .settings import *
+from .settings import COLUMNS_FOR_SHP_EXPORT
+from .utils.UtilMisc import UtilMisc
 
 class AppKernel():
     """
@@ -110,7 +111,6 @@ class AppKernel():
         self.stats = {}
         self.visualizer = Visualizer()
 
-        self.config = settings
         
     def run_geo_checker(self, output_path: str, layers_dict: dict):
         geochecker_out = os.path.join(output_path, "geochecker_results")
@@ -125,9 +125,9 @@ class AppKernel():
             linkage_map=linkage_path,
             arc_map=arc_path,
             node_map=node_path,
-            catch_name=layers_dict.get('catchment', {}).get('col_name', 'CATCH'),
-            gw_name=layers_dict.get('gw', {}).get('col_name', 'GW'),
-            ds_prefix=layers_dict.get('ds', {}).get('col_name', 'DS')
+            catch_name='CATCH',
+            gw_name='GW',
+            ds_prefix='DS'
         )
 
         geo_checker = GeoChecker(checks=[
@@ -168,12 +168,7 @@ class AppKernel():
 
         # 1. Definir la estructura de columnas exacta que exige WEAP/MODFLOW
         # Ajusta los nombres de las llaves ('CATCH', 'DS1', etc.) según tus settings.py
-        columnas_exportacion = {
-            'gw': ['GW'],
-            'catchment': ['CATCH'],
-            'river': ['RIVER'],
-            'ds': ['DS1', 'DS2', 'DS3', 'DS4']
-        }
+        columnas_exportacion = COLUMNS_FOR_SHP_EXPORT
 
         # 2. Asegurarnos de que las columnas existan en la capa de la malla
         provider = grid_layer.dataProvider()
@@ -337,7 +332,7 @@ class AppKernel():
         if run_geochecker:
             self.output_path = output_path
             self.run_geo_checker(output_path, layers_dict)
-
+            
 
         te = time.time()
         self.stats['TOTAL_TIME'] = f"{te - ts:.2f} seg"

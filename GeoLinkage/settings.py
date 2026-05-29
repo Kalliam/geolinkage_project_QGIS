@@ -230,3 +230,10 @@ FEATURE_NAMES = {
         "main program": "main",
         "geometry checker": "geo_check"
     }
+
+COLUMNS_FOR_SHP_EXPORT = {
+    'gw': ['GW'],
+    'catchment': ['CATCH'],
+    'river': ['RIVER'],
+    'ds': ['DS1', 'DS2', 'DS3', 'DS4']
+}

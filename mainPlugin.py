@@ -277,7 +277,10 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
                 run_geochecker=run_geochecker
             )
             
-            QMessageBox.information(self, "Éxito", "El procesamiento de GeoLinkage ha concluido correctamente.")
+            if run_geochecker:
+                QMessageBox.information(self, "Éxito", "El procesamiento de GeoLinkage y Geochecker ha concluido correctamente.")
+            else:
+                QMessageBox.information(self, "Éxito", "El procesamiento de GeoLinkage ha concluido correctamente.")
 
         except Exception as e:
             import traceback
