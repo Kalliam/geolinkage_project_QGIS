@@ -111,14 +111,13 @@ class GeoChecker:
 
     """
 
-    def __init__(self, checks, config, folder_path=None):
+    def __init__(self, checks, folder_path=None):
         self.checks = checks
 
         self.arcs = None
         self.nodes = None
         self.cells = None
 
-        self.config = config
         self.visualizer = Visualizer()
         self.folder_path = None
 
@@ -154,42 +153,32 @@ class GeoChecker:
             for check in self.checks:
                 check.node_init_operation(node_id ,node)
         
-        self.summary.set_process_line("init_check_node", check_error = False)
-
     def init_arcs_loop(self):
         for arc_id , arc in self.arcs.items():
             for check in self.checks:
                 check.arc_init_operation(arc_id, arc)
         
-        self.summary.set_process_line("init_check_arc", check_error = False)
         
     def init_cells_loop(self):
         for cell_id, cell in self.cells.items():
             for check in self.checks:
                 check.cell_init_operation(cell_id, cell)
 
-        self.summary.set_process_line("init_check_cell", check_error = False)
-
     def check_nodes_loop(self):
         for node_id, node in self.nodes.items():
             for check in self.checks:
                 check.node_check_operation(node_id, node)
         
-        self.summary.set_process_line("perform_check_node", check_error = False)
 
     def check_arcs_loop(self):
         for arc_id, arc in self.arcs.items():
             for check in self.checks:
                 check.arc_check_operation(arc_id, arc)
         
-        self.summary.set_process_line("perform_check_arc", check_error = False)
-
     def check_cells_loop(self):
         for cell_id, cell in self.cells.items():
             for check in self.checks:
                 check.cell_check_operation(cell_id, cell)
-
-        self.summary.set_process_line("perform_check_cell", check_error = False)
 
     def build_checks(self):
         self.init_arcs_loop()
@@ -206,8 +195,6 @@ class GeoChecker:
             check.plot(self.visualizer)
         
     def run(self):
-        for check in self.checks:
-            self.summary.set_input_param(check.get_name(), check.get_description())
         # Initializing secuence
         self.build_checks()
         # Checking secuence

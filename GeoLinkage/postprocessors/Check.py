@@ -69,7 +69,7 @@ class Check(ABC):
 
     def get_cell_feature_data(self, cell, feature_type):
         # 
-        feature = cell[feature_type]
+        feature = cell.get(feature_type)
         if feature:
             return feature["data"]
         else: 
@@ -78,7 +78,7 @@ class Check(ABC):
     # This one incurs in a mistake when dealing with demand_sites, it only gives you the first demand site name.
     def get_cell_feature_names(self, cell, feature_type):
         names = []
-        feature = cell[feature_type]
+        feature = cell.get(feature_type)
         if feature:
             for f in feature["data"]:
                 names.append(f["name"])

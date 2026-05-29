@@ -1,3 +1,4 @@
+from GeoLinkage.utils.UtilMisc import UtilMisc
 import time
 import os
 from collections import namedtuple
@@ -11,6 +12,7 @@ from .processors.GroundwaterProcessor import GroundwaterProcess
 from .postprocessors.SuperpositionCheck import SuperpositionCheck
 from .processors.RiverProcessor import RiverProcess
 from  .utils.Visualizer import *
+from .utils.UtilMisc import *
 from . import settings
 
 class AppKernel():
@@ -108,23 +110,33 @@ class AppKernel():
         self.stats = {}
         self.visualizer = Visualizer()
 
-    #     ## GeoCheker (tengo que importar el traducido)
-    #     self.config = settings
-    #     self.consolidate_cells = None
-    #     self.geo_checker = GeoChecker(checks=
-    #                     [
-    #                         SuperpositionCheck(base_feature='groundwater', secondary_feature='catchment', config=self.config),
-    #                         SuperpositionCheck(base_feature='groundwater', secondary_feature='demand_site', config=self.config)
-    #                     ]
-    #         , config= self.config
-    #         )
+        self.config = settings
         
-    # def run_geo_checker(self, result_path: str):
-    #     geochecker_out = os.path.join(base_output_path, "geochecker_results")
-    #     os.makedirs(geochecker_out, exist_ok=True)
-    #     self.geo_checker.set_result_path(result_path)
-    #     self.geo_checker.setup(consolidate_cells=self.consolidate_cells, arcs=self.geo_processor.arcs, nodes=self.geo_processor.nodes)
-    #     self.geo_checker.run()
+    def run_geo_checker(self, output_path: str, layers_dict: dict):
+        geochecker_out = os.path.join(output_path, "geochecker_results")
+        os.makedirs(geochecker_out, exist_ok=True)
+        linkage_path = os.path.join(output_path, "linkage_final.shp")
+        
+        # .source() devuelve la ruta del archivo .shp en el disco
+        arc_path = layers_dict['river']['river_layer'].source()
+        node_path = layers_dict['river']['node_layer'].source()
+
+        cells, arcs, nodes = UtilMisc.structure_creation(
+            linkage_map=linkage_path,
+            arc_map=arc_path,
+            node_map=node_path,
+            catch_name=layers_dict.get('catchment', {}).get('col_name', 'CATCH'),
+            gw_name=layers_dict.get('gw', {}).get('col_name', 'GW'),
+            ds_prefix=layers_dict.get('ds', {}).get('col_name', 'DS')
+        )
+
+        geo_checker = GeoChecker(checks=[
+            SuperpositionCheck(base_feature='groundwater', secondary_feature='catchment'),
+            SuperpositionCheck(base_feature='groundwater', secondary_feature='demand_site')
+        ], folder_path=geochecker_out)
+
+        geo_checker.setup(cells, arcs, nodes)
+        geo_checker.run()
 
     def consolidate_grid_attributes(self, grid_layer, layers_dict):
         """
@@ -200,7 +212,7 @@ class AppKernel():
 
             atributos_celda = {}
 
-# -------------------------------------------------------------------------
+            # -------------------------------------------------------------------------
             # EXTRACCIÓN DIRECTA Y A PRUEBA DE FALLOS
             # -------------------------------------------------------------------------
             
@@ -323,8 +335,8 @@ class AppKernel():
 
         ## no implementado aun
         if run_geochecker:
-            #self.run_geo_checker(output_path)
-            print("GeoChecker esta desactivado temporalmente.")
+            self.output_path = output_path
+            self.run_geo_checker(output_path, layers_dict)
 
 
         te = time.time()

@@ -79,7 +79,7 @@ class SuperpositionCheck(Check):
         each cell.
     """
 
-    def __init__(self, base_feature, secondary_feature, config):
+    def __init__(self, base_feature, secondary_feature):
         super().__init__()
         self.name = f"Chequeo superposición {base_feature}-{secondary_feature}"
         self.description = f"Chequea si la superposición de elementos [{base_feature}-{secondary_feature}] en el archivo de enlace es correspondida por una conexión en el modelo WEAP, con el fin de prevenir perdida de flujo."
@@ -95,102 +95,119 @@ class SuperpositionCheck(Check):
         self.nodes = {}
 
         self.connections = {}
-        self.connection_error = {} 
+        self.connection_error = {}
 
     # Space for auxiliary functions specific to this class.
 
-    def add_error(self, base_element, super_element, area):
+    def add_error(self, base_element, super_element, area=1):
         if not self.connection_error.get(base_element):
             self.connection_error[base_element] = {}
         if not self.connection_error[base_element].get(super_element):
             self.connection_error[base_element][super_element] = 0
         self.connection_error[base_element][super_element] += area
 
-    def make_errors(self):
-        for base, secondaries in self.connection_error.items():
-            self.errors.append(f"El elemento {base} del tipo {self.base_feature} no está conectado a los elementos {secondaries} de tipo {self.secondary_feature}.")
-
     def set_connection(self, base_info, secondary_info):
         if not self.connections.get(base_info["name"]):
-            # should never happen because we already set every node with an empty dict 
+            # should never happen because we already set every node with an empty dict
             self.connections[base_info["name"]] = dict()
         self.connections[base_info["name"]][secondary_info["name"]] = 0
 
     def check_connection(self, base_name, secondary_name):
         if self.connections.get(base_name):
             return secondary_name in self.connections[base_name]
-        
+
         # Solo llega aquí si no existe el elemento base en WEAP.
         return True
-    
+
     def make_error_dict_for_df(self):
         error_list = []
         for base_element, secondary_elements in self.connection_error.items():
             base_element_area = self.base_names[base_element]
             for secondary_element, error_area in secondary_elements.items():
                 secondary_element_area = self.secondary_names[secondary_element]
-                error_list.append({ self.base_feature: base_element,
-                                    f"{self.base_feature}_area" : base_element_area,
-                                    self.secondary_feature: secondary_element,
-                                    f"{self.secondary_feature}_area" : secondary_element_area,
-                                    "area_error": error_area,
-                                    f"percentage_error_of_{self.base_feature}": error_area / base_element_area,
-                                    f"percentage_error_of_{self.secondary_feature}": error_area / secondary_element_area,
-                                    })
+                error_list.append(
+                    {
+                        self.base_feature: base_element,
+                        f"{self.base_feature}_area": base_element_area,
+                        self.secondary_feature: secondary_element,
+                        f"{self.secondary_feature}_area": secondary_element_area,
+                        "area_error": error_area,
+                        f"percentage_error_of_{self.base_feature}": error_area
+                        / base_element_area,
+                        f"percentage_error_of_{self.secondary_feature}": error_area
+                        / secondary_element_area,
+                    }
+                )
         return error_list
 
     def make_error_file_list(self):
         error_list = []
         if not self.connection_error or len(self.connection_error) == 0:
             return error_list
-        
+
         errors = {}
         for base in self.connection_error.keys():
             for secondary in self.connection_error[base].keys():
-                errors[f"{base}-{secondary}"] = {"amount_error": self.connection_error[base][secondary],
-                                                 "percentaje_error_over_primary": self.connection_error[base][secondary] / self.base_names[base],
-                                                 "percentaje_error_over_secondary": self.connection_error[base][secondary] / self.secondary_names[secondary]}
+                errors[f"{base}-{secondary}"] = {
+                    "amount_error": self.connection_error[base][secondary],
+                    "percentaje_error_over_primary": self.connection_error[base][
+                        secondary
+                    ]
+                    / self.base_names[base],
+                    "percentaje_error_over_secondary": self.connection_error[base][
+                        secondary
+                    ]
+                    / self.secondary_names[secondary],
+                }
 
-        #sort the errors by the amount of errors
-        errors = dict(sorted(errors.items(), key=lambda item: item[1]["amount_error"], reverse=True))
-        longest_base_name = max([len(error.split("-")[0]) for error in errors.keys()])-1
-        longest_secondary_name = max([len(error.split("-")[1]) for error in errors.keys()])-1
+        # sort the errors by the amount of errors
+        errors = dict(
+            sorted(
+                errors.items(), key=lambda item: item[1]["amount_error"], reverse=True
+            )
+        )
+        longest_base_name = (
+            max([len(error.split("-")[0]) for error in errors.keys()]) - 1
+        )
+        longest_secondary_name = (
+            max([len(error.split("-")[1]) for error in errors.keys()]) - 1
+        )
 
         for error in errors.keys():
-            [base, secondary] = error.split('-')
+            [base, secondary] = error.split("-")
             error_txt = f"{self.base_feature}: {base}{" "*(longest_base_name-len(base) + 1)}|-| {self.secondary_feature}: {secondary}{" "*(longest_secondary_name-len(secondary) + 1)}-> {errors[error]['amount_error']} area de error,  {errors[error]['percentaje_error_over_primary']*100:.2f}% del {self.base_feature}, {errors[error]['percentaje_error_over_secondary']*100:.2f}% del {self.secondary_feature}."
             error_list.append(error_txt)
-        
+
         return error_list
 
     def make_connection_matrix(self):
-            if self.base_names == {} or self.secondary_names == {}:
-                return None, None, None
-    
-            base_names = list(self.base_names.keys())
-            secondary_names = list(self.secondary_names.keys())
+        if self.base_names == {} or self.secondary_names == {}:
+            return None, None, None
 
-            matrix = np.ones((len(base_names), len(secondary_names)), dtype=float)
+        base_names = list(self.base_names.keys())
+        secondary_names = list(self.secondary_names.keys())
 
-            for i, base in enumerate(base_names):
-                for j, secondary in enumerate(secondary_names):
-                    if secondary in self.connections[base]:
-                        matrix[i][j] = 0
-            
-            # Add the errors in red
-            for base, secondaries in self.connection_error.items():
-                i = base_names.index(base)
-                for secondary in secondaries:
-                    j = secondary_names.index(secondary)
-                    matrix[i][j] = 0.5
+        matrix = np.ones((len(base_names), len(secondary_names)), dtype=float)
 
-            # this made a simple connection matrix
-            return matrix, base_names, secondary_names
-    
+        for i, base in enumerate(base_names):
+            for j, secondary in enumerate(secondary_names):
+                if secondary in self.connections.get(base, {}):
+                    matrix[i][j] = 0
+
+        # Add the errors in red
+        for base, secondaries in self.connection_error.items():
+            i = base_names.index(base)
+            for secondary in secondaries:
+                j = secondary_names.index(secondary)
+                matrix[i][j] = 0.5
+
+        # this made a simple connection matrix
+        return matrix, base_names, secondary_names
+
     def make_error_matrix(self):
         if self.connection_error == {}:
             return None, None, None
-        
+
         base_names = list(self.connection_error.keys())
         secondary_names = list(set().union(*list(self.connection_error.values())))
 
@@ -201,46 +218,75 @@ class SuperpositionCheck(Check):
             i = base_names.index(base)
             for secondary in secondaries:
                 j = secondary_names.index(secondary)
-                magnitud = self.connection_error[base][secondary] / self.secondary_names[secondary]
+                magnitud = (
+                    self.connection_error[base][secondary]
+                    / self.secondary_names[secondary]
+                )
                 matrix[i][j] = magnitud
-                
+
         return matrix, base_names, secondary_names
 
     def plot(self, visualizer: Visualizer):
-        matrix, base_labels, secondary_labels= self.make_connection_matrix()
-        visualizer.write_matrix_img(matrix, f"{self.base_feature}_{self.secondary_feature}_connection_matrix", \
-                                    color_labels=[ "Connection", "Error", "No Connection"], \
-                                    colors_list=["#000000", "#ff0000","#ffffff"], \
-                                    row_labels=base_labels, column_labels=secondary_labels, linewidth=0.5,\
-                                    cbar=True, min_val = 0, max_val = 1, \
-                                    title=f"Matriz de conexión entre {self.base_feature} y {self.secondary_feature}", \
-                                    x_label = self.secondary_feature, y_label = self.base_feature)
+        matrix, base_labels, secondary_labels = self.make_connection_matrix()
+        visualizer.write_matrix_img(
+            matrix,
+            f"{self.base_feature}_{self.secondary_feature}_connection_matrix",
+            color_labels=["Connection", "Error", "No Connection"],
+            colors_list=["#000000", "#ff0000", "#ffffff"],
+            row_labels=base_labels,
+            column_labels=secondary_labels,
+            linewidth=0.5,
+            cbar=True,
+            min_val=0,
+            max_val=1,
+            title=f"Matriz de conexión entre {self.base_feature} y {self.secondary_feature}",
+            x_label=self.secondary_feature,
+            y_label=self.base_feature,
+        )
 
-        matrix, base_labels, secondary_labels= self.make_error_matrix()
-        visualizer.write_matrix_img(matrix, f"{self.base_feature}_{self.secondary_feature}_error_magnitude_matrix", \
-                                    row_labels=base_labels, column_labels=secondary_labels, linewidth=0.5,\
-                                    cbar=True, cmap='rocket_r', min_val = 0, max_val = 1,\
-                                    title=f"Matriz de magnitud de errores entre {self.base_feature} y {self.secondary_feature}, normalizado sobre el área de {self.secondary_feature}", \
-                                    x_label = self.secondary_feature, y_label = self.base_feature) 
+        matrix, base_labels, secondary_labels = self.make_error_matrix()
+        visualizer.write_matrix_img(
+            matrix,
+            f"{self.base_feature}_{self.secondary_feature}_error_magnitude_matrix",
+            row_labels=base_labels,
+            column_labels=secondary_labels,
+            linewidth=0.5,
+            cbar=True,
+            cmap="rocket_r",
+            min_val=0,
+            max_val=1,
+            title=f"Matriz de magnitud de errores entre {self.base_feature} y {self.secondary_feature}, normalizado sobre el área de {self.secondary_feature}",
+            x_label=self.secondary_feature,
+            y_label=self.base_feature,
+        )
 
         error_list = self.make_error_file_list()
-        visualizer.write_text_file(f"{self.base_feature}_{self.secondary_feature}_error_report", texts=error_list,
-                                    preface= f"Reporte de errores en la superposición de elementos {self.base_feature}-{self.secondary_feature} en el archivo de enlace. Un error implica que la superposición no está correspondida por una conexión en WEAP. Las causas más frecuentes son, un enlace faltante que se debe agregar al modelo WEAP, o coordenadas incorrectas proveidas para la esquina inferior izquierda (provea estas coordenadas con la mayor cantidad de decimales posible).")
-    
+        visualizer.write_text_file(
+            f"{self.base_feature}_{self.secondary_feature}_error_report",
+            texts=error_list,
+            preface=f"Reporte de errores en la superposición de elementos {self.base_feature}-{self.secondary_feature} en el archivo de enlace. Un error implica que la superposición no está correspondida por una conexión en WEAP. Las causas más frecuentes son, un enlace faltante que se debe agregar al modelo WEAP, o coordenadas incorrectas proveidas para la esquina inferior izquierda (provea estas coordenadas con la mayor cantidad de decimales posible).",
+        )
+
         error_dict_for_df = self.make_error_dict_for_df()
-        visualizer.write_csv_file(f"{self.base_feature}_{self.secondary_feature}_error_report", error_dict_for_df)
+        visualizer.write_csv_file(
+            f"{self.base_feature}_{self.secondary_feature}_error_report",
+            error_dict_for_df,
+        )
 
     def arc_init_operation(self, arc_id, arc):
         pass
 
     def node_init_operation(self, node_id, node):
-        type_id = node['type_id']
-        if type_id == self.base_feature_type_id or type_id == self.secondary_feature_type_id:
+        type_id = node["type_id"]
+        if (
+            type_id == self.base_feature_type_id
+            or type_id == self.secondary_feature_type_id
+        ):
             self.nodes[node_id] = node
             if type_id == self.base_feature_type_id:
                 self.base_names[node["name"]] = 0
                 self.connections[node["name"]] = dict()
-            else: 
+            else:
                 self.secondary_names[node["name"]] = 0
 
     def cell_init_operation(self, cell_id, cell):
@@ -251,32 +297,49 @@ class SuperpositionCheck(Check):
         dst_id = arc["dst_id"]
 
         if (src_id and dst_id) and (src_id in self.nodes and dst_id in self.nodes):
-            if self.nodes[src_id]["type_id"] == self.base_feature_type_id and self.nodes[dst_id]["type_id"] == self.secondary_feature_type_id:
+            if (
+                self.nodes[src_id]["type_id"] == self.base_feature_type_id
+                and self.nodes[dst_id]["type_id"] == self.secondary_feature_type_id
+            ):
                 self.set_connection(self.nodes[src_id], self.nodes[dst_id])
-            elif self.nodes[src_id]["type_id"] == self.secondary_feature_type_id and self.nodes[dst_id]["type_id"] == self.base_feature_type_id:
+            elif (
+                self.nodes[src_id]["type_id"] == self.secondary_feature_type_id
+                and self.nodes[dst_id]["type_id"] == self.base_feature_type_id
+            ):
                 self.set_connection(self.nodes[dst_id], self.nodes[src_id])
 
     def node_check_operation(self, node_id, node):
         pass
 
     def cell_check_operation(self, cell_id, cell):
-        base_element_data = self.get_cell_feature_data(cell, self.base_feature)
-        secondary_element_data = self.get_cell_feature_data(cell, self.secondary_feature)
+        base_element_data = self.get_cell_feature_data(
+            cell, self.base_feature
+        )  # [] if non existent
+        secondary_element_data = self.get_cell_feature_data(
+            cell, self.secondary_feature
+        )
+
         cell_area = cell["cell_area"]
 
         for base in base_element_data:
-            base_name = base['name']
-            self.base_names[base_name] += cell_area
+            #if para el caso de que no exista y no se quiebre
+            if base not in self.base_names:
+                self.base_names[base] = 0
+            self.base_names[base] += cell_area
+        for secondary in secondary_element_data:
+            #mismo caso de que no exista
+            if secondary not in self.secondary_names:
+                self.secondary_names[secondary] = 0
+            self.secondary_names[secondary] += cell_area
+
+        if base_element_data is None or secondary_element_data is None:
+            return
+        for base in base_element_data:
+            base_name = base
             for secondary in secondary_element_data:
-                secondary_name = secondary['name']
-                self.secondary_names[secondary_name] += cell_area
+                secondary_name = secondary
                 if not self.check_connection(base_name, secondary_name):
-                    self.add_error(base_name, secondary_name, cell_area)
+                    self.add_error(base_name, secondary_name, area=cell_area)
                 else:
                     if self.connections.get(base_name):
                         self.connections[base_name][secondary_name] += cell_area
-        
-        self.make_errors()
-        
-                    
-
