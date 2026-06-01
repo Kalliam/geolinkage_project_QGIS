@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>588</width>
-    <height>420</height>
+    <height>462</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -49,7 +49,6 @@
      <property name="movable">
       <bool>false</bool>
      </property>
-     <!-- ===== Tab 1: Capas Principales ===== -->
      <widget class="QWidget" name="tab">
       <attribute name="title">
        <string>Capas Principales</string>
@@ -67,7 +66,6 @@
        <property name="bottomMargin">
         <number>10</number>
        </property>
-       <!-- MODFLOW checkbox row -->
        <item>
         <layout class="QHBoxLayout" name="tab1_modflowRow">
          <item>
@@ -99,7 +97,6 @@
          </item>
         </layout>
        </item>
-       <!-- frame_extracted_grid (visible when chk_modflow unchecked) -->
        <item>
         <widget class="QFrame" name="frame_extracted_grid">
          <property name="frameShape">
@@ -177,7 +174,6 @@
          </layout>
         </widget>
        </item>
-       <!-- frame_modflow (visible when chk_modflow checked) -->
        <item>
         <widget class="QFrame" name="frame_modflow">
          <property name="frameShape">
@@ -190,6 +186,9 @@
           <number>1</number>
          </property>
          <layout class="QHBoxLayout" name="frame_modflow_hlayout">
+          <property name="spacing">
+           <number>20</number>
+          </property>
           <property name="leftMargin">
            <number>8</number>
           </property>
@@ -202,10 +201,6 @@
           <property name="bottomMargin">
            <number>8</number>
           </property>
-          <property name="spacing">
-           <number>20</number>
-          </property>
-          <!-- Left column: X, Y, Z labels + spinboxes -->
           <item>
            <layout class="QGridLayout" name="frame_modflow_left">
             <property name="verticalSpacing">
@@ -219,7 +214,11 @@
              </widget>
             </item>
             <item row="1" column="0">
-             <widget class="QDoubleSpinBox" name="spin_x"/>
+             <widget class="QDoubleSpinBox" name="spin_x">
+              <property name="maximum">
+               <double>1000.000000000000000</double>
+              </property>
+             </widget>
             </item>
             <item row="2" column="0">
              <widget class="QLabel" name="label_56">
@@ -229,7 +228,11 @@
              </widget>
             </item>
             <item row="3" column="0">
-             <widget class="QDoubleSpinBox" name="spin_y"/>
+             <widget class="QDoubleSpinBox" name="spin_y">
+              <property name="maximum">
+               <double>1000.000000000000000</double>
+              </property>
+             </widget>
             </item>
             <item row="4" column="0">
              <widget class="QLabel" name="label_55">
@@ -239,11 +242,14 @@
              </widget>
             </item>
             <item row="5" column="0">
-             <widget class="QDoubleSpinBox" name="spin_z"/>
+             <widget class="QDoubleSpinBox" name="spin_z">
+              <property name="maximum">
+               <double>360.000000000000000</double>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
-          <!-- Right column: Explore file path + button -->
           <item>
            <layout class="QVBoxLayout" name="frame_modflow_right">
             <item>
@@ -281,7 +287,6 @@
          </layout>
         </widget>
        </item>
-       <!-- Catchments / Groundwater table (3 cols x 3 rows) -->
        <item>
         <layout class="QGridLayout" name="tab1_catchGrid">
          <property name="horizontalSpacing">
@@ -290,7 +295,6 @@
          <property name="verticalSpacing">
           <number>4</number>
          </property>
-         <!-- Header row -->
          <item row="0" column="1">
           <widget class="QLabel" name="label">
            <property name="text">
@@ -305,7 +309,6 @@
            </property>
           </widget>
          </item>
-         <!-- Layer name row -->
          <item row="1" column="0">
           <widget class="QLabel" name="label_13">
            <property name="text">
@@ -319,7 +322,6 @@
          <item row="1" column="2">
           <widget class="QgsMapLayerComboBox" name="cmb_layer_gw"/>
          </item>
-         <!-- Column name row -->
          <item row="2" column="0">
           <widget class="QLabel" name="label_12">
            <property name="text">
@@ -337,7 +339,6 @@
        </item>
       </layout>
      </widget>
-     <!-- ===== Tab 2: WEAP/Output ===== -->
      <widget class="QWidget" name="tab_3">
       <attribute name="title">
        <string>WEAP/Output</string>
@@ -355,13 +356,11 @@
        <property name="bottomMargin">
         <number>10</number>
        </property>
-       <!-- Nodes/Arcs table + Pozos side by side -->
        <item>
         <layout class="QHBoxLayout" name="tab3_topRow">
          <property name="spacing">
           <number>20</number>
          </property>
-         <!-- Left: Nodes/Arcs table (3 cols x 4 rows) -->
          <item>
           <layout class="QGridLayout" name="tab3_nodesArcsGrid">
            <property name="horizontalSpacing">
@@ -370,7 +369,6 @@
            <property name="verticalSpacing">
             <number>4</number>
            </property>
-           <!-- Header row -->
            <item row="0" column="1">
             <widget class="QLabel" name="label_3">
              <property name="text">
@@ -385,7 +383,6 @@
              </property>
             </widget>
            </item>
-           <!-- Layer name row -->
            <item row="1" column="0">
             <widget class="QLabel" name="label_15">
              <property name="text">
@@ -399,7 +396,6 @@
            <item row="1" column="2">
             <widget class="QgsMapLayerComboBox" name="cmb_layer_arcs"/>
            </item>
-           <!-- Column name row -->
            <item row="2" column="0">
             <widget class="QLabel" name="label_14">
              <property name="text">
@@ -413,7 +409,6 @@
            <item row="2" column="2">
             <widget class="QgsFieldComboBox" name="cmb_field_arc_name"/>
            </item>
-           <!-- (Rivers) sublabel -->
            <item row="3" column="2">
             <widget class="QLabel" name="label_5">
              <property name="text">
@@ -421,7 +416,6 @@
              </property>
             </widget>
            </item>
-           <!-- Column with Node type row -->
            <item row="4" column="0">
             <widget class="QLabel" name="label_17">
              <property name="text">
@@ -434,7 +428,6 @@
            </item>
           </layout>
          </item>
-         <!-- Right: Pozos (independent) -->
          <item>
           <layout class="QVBoxLayout" name="tab3_pozosCol">
            <item>
@@ -471,13 +464,11 @@
          </item>
         </layout>
        </item>
-       <!-- DemandSite / DS prefix / Results folder row -->
        <item>
         <layout class="QHBoxLayout" name="tab3_dsRow">
          <property name="spacing">
           <number>10</number>
          </property>
-         <!-- Left: DS Files list -->
          <item>
           <layout class="QVBoxLayout" name="tab3_dsListCol">
            <item>
@@ -506,7 +497,6 @@
            </item>
           </layout>
          </item>
-         <!-- Middle: DS prefix -->
          <item>
           <layout class="QVBoxLayout" name="tab3_dsPrefixCol">
            <item>
@@ -538,7 +528,6 @@
            </item>
           </layout>
          </item>
-         <!-- Right: Results folder -->
          <item>
           <layout class="QVBoxLayout" name="tab3_outputCol">
            <item>
@@ -575,7 +564,6 @@
          </item>
         </layout>
        </item>
-       <!-- Bottom: Run Geochecker + Run button -->
        <item>
         <layout class="QHBoxLayout" name="tab3_runRow">
          <item>

@@ -104,24 +104,24 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
 
     #  funciones de selección de rutas 
     def select_results_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta de Resultados", "")
+        folder = QFileDialog.getExistingDirectory(self, "Select results folder", "")
         if folder:
             self.txt_output_folder.setText(folder)
 
     def select_modflow_file(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo .dis", "", "MODFLOW Discretization (*.dis)")
+        filename, _ = QFileDialog.getOpenFileName(self, "Select .dis or .nam file", "", "MODFLOW files (*.dis *.nam)")
         if filename:
             self.txt_modflow_path.setText(filename)
 
     def select_ds_file(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo de Sitios de Demanda", "", "Archivos de texto (*.txt)")
+        filename, _ = QFileDialog.getOpenFileName(self, "Select file with Demand Sites", "", "Text files (*.txt)")
         if filename:
             self.txt_ds_file.setText(filename)
 
     def _generate_grid_from_modflow(self, modflow_file_path: str, x_ll: float, y_ll: float, z_rot: float) -> QgsVectorLayer:
         """
-        Lee un archivo MODFLOW usando flopy, genera un shapefile con la malla,
-        asegura la compatibilidad de CRS y previene bloqueos de archivos en Windows.
+        Read a MODFLOW file using flopy, generate a shapefile with the grid,
+        ensure CRS compatibility and prevent file locks in Windows.
         """
         try:
             import flopy
