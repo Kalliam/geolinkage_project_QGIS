@@ -14,6 +14,7 @@ For more information about the installation process and use of GeoLinkage checko
 
 Not useful for unstructured grid subterranean models (e.g. MODFLOW USG).
 
+
 ## Installation (manual)
 
 1. Clone or download the repository:
@@ -28,14 +29,13 @@ Not useful for unstructured grid subterranean models (e.g. MODFLOW USG).
    | **Windows** | `%APPDATA%\QGIS\QGIS4\profiles\default\python\plugins\` |
    | **Linux** | `~/.local/share/QGIS/QGIS4/profiles/default/python/plugins/` |
    | **macOS** | `~/Library/Application Support/QGIS/QGIS4/profiles/default/python/plugins/` |
-   > [!NOTE]
-   > For QGIS 3.x, replace `QGIS4` with `QGIS3` in the path.
+> [!NOTE]
+> For QGIS 3.x, replace `QGIS4` with `QGIS3` in the path.
 
 3. Restart QGIS.
 
 4. Activate the plugin from **Plugins → Manage and Install Plugins → Installed** → check **GeoLinkage**.
 
----
 
 ## Usage
 
@@ -43,8 +43,8 @@ Not useful for unstructured grid subterranean models (e.g. MODFLOW USG).
 
 Before opening the plugin, make sure to:
 
-- **Define the project CRS** (*Project → Properties → CRS*).
-- **Load the necessary vector layers** in the layers panel:
+- Define the project CRS (*Project → Properties → CRS*).
+- Load the necessary vector layers in the layers panel:
 
 | Layer | Geometry | Description |
 |---|---|---|
