@@ -1,5 +1,6 @@
-# GeoLinkage
-GeoLinkage is a GRASS GIS plugin that automates the creation of linkage files for WEAP-MODFLOW integrated models.
+# GeoLinkage — QGIS Plugin
+
+GeoLinkage is a plugin for **QGIS (3.x – 4.x)** that automates the creation of linkage files for integrated **WEAP-MODFLOW** models.
 
 It receives Shapefile maps containing the information for Catchments, Groundwater and Demand Sites, and overlays them over an empty linkage file provided by the user, or obtained directly from the MODFLOW model with FloPy.
 
@@ -11,63 +12,95 @@ For more information about the installation process and use of GeoLinkage checko
 
 ## Use restrictions
 
-Currently only available for Linux machines.
-
 Not useful for unstructured grid subterranean models (e.g. MODFLOW USG).
 
-## Relevant links
-Showcase video:
-https://drive.google.com/file/d/1NFG1aw8eztr5cJa0EeCr5cNrY01L7ufF/view?usp=drive_link
+## Installation (manual)
 
-How to Geolinkage video:
-https://drive.google.com/file/d/19tRm_ErqrzEwgsBCHQHWXmDADizNNsCh/view?usp=drive_link
+1. Clone or download the repository:
+   ```bash
+   git clone https://github.com/Kalliam/geolinkage_project_QGIS.git
+   ```
 
-GeoLinkage Manual:
-https://drive.google.com/file/d/19cyfgfXf_MqKMbWbbQTBxmONW3WIANr7/view?usp=drive_link
+2. Copy the entire plugin folder to the QGIS plugins directory:
 
-## Help
-- Grass Console: (or  *File -> Launch Script*)
-```
-    v.geolinkage.py --help
-```
+   | Operating System | Plugins Path |
+   |---|---|
+   | **Windows** | `%APPDATA%\QGIS\QGIS4\profiles\default\python\plugins\` |
+   | **Linux** | `~/.local/share/QGIS/QGIS4/profiles/default/python/plugins/` |
+   | **macOS** | `~/Library/Application Support/QGIS/QGIS4/profiles/default/python/plugins/` |
+   > [!NOTE]
+   > For QGIS 3.x, replace `QGIS4` with `QGIS3` in the path.
 
-- Terminal:
-```bash
-    python3 CmdInterface.py -h
-```
+3. Restart QGIS.
 
-## Examples
-You can run similar commands with all the other examples. From largest to smallest model, the order would be: Limari, Azapa, Fictional site. You can run them from smallest to largest to see if you get any unexpected errors.
-### Azapa example with MODFLOW model (*-g option*) and GeoCheck option (*-c option*):
+4. Activate the plugin from **Plugins → Manage and Install Plugins → Installed** → check **GeoLinkage**.
 
-```bash
-python3 CmdInterface.py
-  -g 
-  -c
-  --linkage_in_folder=./examples/azapa/linkage
-  --gw_model=./examples/azapa/gw/model/mf2005.nam
-  --linkage_out_folder=./examples/azapa/out
-  --node=./examples/azapa/weap/WEAPNode.shp
-  --arc=./examples/azapa/weap/WEAPArc.shp
-  --epsg_code=32719
-  --catchment=./examples/azapa/catchment/Catchments_v1.shp
-  --gw=./examples/azapa/gw/GW_para_linkage_v1.shp
-  --ds_folder=./examples/azapa/ds
-  --zrotation=0.0
-  --coords_ll=100,100
-  --geo_check_folder=./examples/azapa/check_results
-```
+---
 
-### Azapa example without MODFLOW model and without Geocheck
+## Usage
 
-```bash
-python3 CmdInterface.py
-  --linkage_in=./examples/azapa/linkage/linkage_in.shp
-  --linkage_out_folder=./examples/azapa/out
-  --node=./examples/azapa/weap/WEAPNode.shp
-  --arc=./examples/azapa/weap/WEAPArc.shp
-  --epsg_code=32719
-  --catchment=./examples/azapa/catchment/Catchments_v1.shp
-  --gw=./examples/azapa/gw/GW_para_linkage_v1.shp
-  --ds_folder=./examples/azapa/ds
-```
+### 1. Prepare the QGIS project
+
+Before opening the plugin, make sure to:
+
+- **Define the project CRS** (*Project → Properties → CRS*).
+- **Load the necessary vector layers** in the layers panel:
+
+| Layer | Geometry | Description |
+|---|---|---|
+| Grid / Empty Linkage | Polygon | Groundwater model discretization grid |
+| Catchments | Polygon | Surface catchment areas |
+| Groundwater (*GW*) | Polygon | Aquifer zones |
+| WEAP Nodes | Point | WEAP model schematic nodes |
+| WEAP Reaches | Line | WEAP model reaches (rivers/canals) |
+| Demand Sites *(optional)* | Polygon | Additional demand areas |
+
+### 2. Open the plugin
+
+Go to **Plugins → GeoLinkage → Run GeoLinkage**.
+
+A dialog box with two tabs will open:
+
+### 3. "Main Layers" Tab
+
+#### Option A — Extracted grid (default)
+- Select the **grid layer** from the dropdown.
+- Assign the attribute table columns representing **row**, **col**, and **cat** (cell ID).
+
+#### Option B — Generate grid from MODFLOW
+- Check the box **"Generate Grid from MODFLOW file (.dis)"**.
+- Select the `.dis` or `.nam` file of the MODFLOW model.
+- Configure the bottom-left corner coordinates (**X**, **Y**) and the **Z rotation**.
+- The plugin will use FloPy to generate the grid as a temporary layer.
+
+#### Catchment and Groundwater Layers
+- Select each layer and the **name column** that identifies each polygon.
+
+### 4. "WEAP/Output" Tab
+
+#### River Schematic
+- Select the **Nodes** layer (points) and the **Reaches** layer (lines).
+- Assign the **node name**, **node type**, and **reach name** columns.
+
+#### Demand Sites
+- **Wells file (.txt):** path to the text file defining well locations *(optional)*.
+- **Area layers:** check the polygon layers in the project representing demand areas in the lower list.
+- **DS Prefix:** text prefix to name the demand sites in the output (default: `DS`).
+
+#### Output Configuration
+- Check **Run GeoChecker** if you want to run the consistency check *(currently disabled)*.
+- Select the **results folder** where `linkage_final.shp` will be saved.
+- Press **Run** to execute the processing.
+
+### 5. Result
+
+The plugin generates the `linkage_final.shp` file in the selected folder. This Shapefile contains the original grid with the following added columns:
+
+| Column | Content |
+|---|---|
+| `GW` | Name of the groundwater area intersecting the cell |
+| `CATCH` | Name of the catchment intersecting the cell |
+| `RIVER` | Name of the river/reach intersecting the cell |
+| `DS1`–`DS4` | Demand sites intersecting the cell |
+
+---

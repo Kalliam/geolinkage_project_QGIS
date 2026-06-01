@@ -32,19 +32,19 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
     def _connect_signals(self):
         """Conecta eventos de la interfaz gráfica a funciones de Python."""
         
-        # 1. Eventos de botones de exploración de directorios/archivos
+        # exploracion de archivos
         self.btn_explore_folder.clicked.connect(self.select_results_folder)
         self.btn_explore_modflow.clicked.connect(self.select_modflow_file)
         self.btn_explore_ds.clicked.connect(self.select_ds_file)
         self.btn_refresh_ds.clicked.connect(self._populate_ds_list)
         
-        # 2. Evento del botón principal
+        # run
         self.btn_run.clicked.connect(self.run_geolinkage)
         
-        # 3. Lógica condicional de la malla (MODFLOW Checkbox)
+        # modflow checkbox
         self.chk_modflow.stateChanged.connect(self.toggle_grid_inputs)
 
-        # 4. Vinculación Capa -> Columnas (Actualiza los campos al cambiar la capa)
+        # vinculacion capa - columnas
         self.cmb_layer_malla.layerChanged.connect(lambda layer: self._update_field_layer(layer, [self.cmb_field_row, self.cmb_field_col, self.cmb_field_cat]))
         self.cmb_layer_cuencas.layerChanged.connect(lambda layer: self._update_field_layer(layer, [self.cmb_field_nombre_cuenca]))
         self.cmb_layer_gw.layerChanged.connect(lambda layer: self._update_field_layer(layer, [self.cmb_field_nombre_gw]))
@@ -77,16 +77,13 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
         layers = QgsProject.instance().mapLayers().values()
         
         for layer in layers:
-            # Filtrar estrictamente por capas vectoriales de tipo polígono
+            # filtrar por capas poligonales
             if layer.type() == QgsMapLayerType.VectorLayer and layer.geometryType() == QgsWkbTypes.PolygonGeometry:
                 item = QListWidgetItem(layer.name())
                 
-                # Habilitar el checkbox en el item
+                # habilitar el checkbox en el item
                 item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
                 item.setCheckState(Qt.CheckState.Unchecked) # Desmarcado por defecto
-                
-                # Almacenar el ID interno de la capa. Esto es vital para evitar
-                # errores si hay dos capas con el mismo nombre en QGIS.
                 item.setData(Qt.ItemDataRole.UserRole, layer.id()) 
                 
                 self.list_widget_ds.addItem(item)
@@ -105,7 +102,7 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
             self.frame_extracted_grid.setVisible(True)
             self.frame_modflow.setVisible(False)
 
-    # --- Funciones de selección de rutas (QFileDialog) ---
+    #  funciones de selección de rutas 
     def select_results_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta de Resultados", "")
         if folder:
@@ -131,40 +128,37 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
         except ImportError:
             raise RuntimeError("La librería 'flopy' no está instalada en el entorno de Python de QGIS.")
 
-        # 1. Carga del modelo MODFLOW
+        # Carga MODFLOW
         model_dir = os.path.dirname(modflow_file_path)
         model_name = os.path.basename(modflow_file_path)
         
         try:
-            # check=False evita que flopy aborte si el modelo numérico tiene errores matemáticos, 
-            # a nosotros solo nos importa extraer la geometría (grilla).
             ml = flopy.modflow.Modflow.load(model_name, model_ws=model_dir, exe_name='mf2005', verbose=False, check=False)
         except Exception as e:
             raise RuntimeError(f"Fallo al leer el modelo MODFLOW con flopy: {e}")
 
-        # 2. Extracción del Sistema de Coordenadas (CRS) del proyecto QGIS
-        # Esto reemplaza al antiguo input manual de EPSG
+        # Sistema de Coordenadas del proyecto QGIS, reemplaza al antiguo input manual de EPSG
         crs = QgsProject.instance().crs()
         if not crs.isValid():
             raise RuntimeError("El proyecto actual de QGIS no tiene un Sistema de Coordenadas definido. Asigne uno antes de procesar.")
         
         epsg_code = crs.postgisSrid()
 
-        # 3. Configuración Espacial
+        # Configuración Espacial
         ml.modelgrid.set_coord_info(xoff=x_ll, yoff=y_ll, angrot=z_rot, epsg=epsg_code, merge_coord_info=True)
 
-        # 4. Generación de Nombre Único para evitar PermissionError (File Lock en Windows)
+        # Generación de Nombre Único para evitar PermissionError (File Lock en Windows)
         temp_dir = tempfile.gettempdir()
         unique_id = uuid.uuid4().hex
         shapefile_path = os.path.join(temp_dir, f"mf_grid_{unique_id}.shp")
         
-        # 5. Escritura Física
+        # Escritura Física
         try:
             ml.modelgrid.write_shapefile(filename=shapefile_path)
         except Exception as e:
             raise RuntimeError(f"Error de flopy al escribir el Shapefile: {e}")
 
-        # 6. Conversión a QgsVectorLayer y validación estricta
+        # Conversión a QgsVectorLayer y validación estricta
         grid_layer = QgsVectorLayer(shapefile_path, "Malla MODFLOW (Temporal)", "ogr")
         
         if not grid_layer.isValid():
@@ -175,13 +169,11 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
 
         return grid_layer
 
-    # --- Ejecución Principal ---
     def run_geolinkage(self):
         """Recolecta los datos de la interfaz y ejecuta el backend."""
         ruta_salida = self.txt_output_folder.text()
         run_geochecker = self.chk_run_geochecker.isChecked()
 
-        # Validación inicial
         if not ruta_salida:
             QMessageBox.warning(self, "Error de Validación", "Debe definir un directorio de salida.")
             return
@@ -190,9 +182,8 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
         data_payload = {}
         capa_malla_resuelta = None
         
-        # INICIAMOS EL ENTORNO PROTEGIDO DESDE AQUÍ
         try:
-            # 1. Resolución de la Capa de Malla
+            # Resolución de la Capa de Malla
             if self.chk_modflow.isChecked():
                 mf_path = self.txt_modflow_path.text()
                 x_val = self.spin_x.value()
@@ -224,21 +215,21 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
                 'col_cat': col_cat_name
             }
 
-            # 2. Extracción de datos de Cuencas (Catchments)
+            # Extracción de datos de Cuencas 
             if self.cmb_layer_cuencas.currentLayer():
                 data_payload['catchment'] = {
                     'catchment_layer': self.cmb_layer_cuencas.currentLayer(),
                     'col_name': self.cmb_field_nombre_cuenca.currentText()
                 }
 
-            # 3. Extracción de datos de Aguas Subterráneas (Groundwater)
+            # Extracción de datos de Aguas Subterráneas
             if self.cmb_layer_gw.currentLayer():
                 data_payload['gw'] = {
                     'gw_layer': self.cmb_layer_gw.currentLayer(),
                     'col_name': self.cmb_field_nombre_gw.currentText()
                 }
 
-            # 4. Extracción del Esquema de Ríos (WEAP Arcs & Nodes)
+            # Extracción del Esquema de Ríos
             if self.cmb_layer_arcs.currentLayer() and self.cmb_layer_nodes.currentLayer():
                 data_payload['river'] = {
                     'river_layer': self.cmb_layer_arcs.currentLayer(),
@@ -248,7 +239,7 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
                     'col_node_type': self.cmb_field_node_type.currentText()
                 }
 
-            # 5. Extracción de Sitios de Demanda (Demand Sites)
+            # Extracción de Sitios de Demanda
             capas_ds_seleccionadas = []
             for i in range(self.list_widget_ds.count()):
                 item = self.list_widget_ds.item(i)
@@ -260,14 +251,12 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
 
             archivo_pozos_txt = self.txt_ds_file.text()
 
-            # ELIMINAR EL IF. El nodo 'ds' se inyecta siempre.
             data_payload['ds'] = {
                 'wells_file_path': archivo_pozos_txt if archivo_pozos_txt else None,
                 'demand_site_layers': capas_ds_seleccionadas,
-                # Nota: Veremos el cambio de .currentText() a .text() en el siguiente punto
                 'col_name': self.txt_ds_prefix.text() 
             }
-            # 6. INSTANCIACIÓN Y EJECUCIÓN SEGURA DEL BACKEND
+            
             kernel = AppKernel(debug=True)
             
             kernel.run(
@@ -284,7 +273,7 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
 
         except Exception as e:
             import traceback
-            traceback.print_exc() # Esto fuerza a Python a imprimir las líneas rojas en la consola
+            traceback.print_exc()
             QMessageBox.critical(self, "Error de Procesamiento", f"Fallo en la ejecución del backend:\n{str(e)}")
 
 
