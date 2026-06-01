@@ -512,7 +512,7 @@
            <item>
             <widget class="QLabel" name="label_18">
              <property name="text">
-              <string>Demand Sites Column Name</string>
+              <string>Demand Sites prefix</string>
              </property>
             </widget>
            </item>
