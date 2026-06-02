@@ -1,6 +1,7 @@
 import os
 import tempfile
 import uuid
+import numpy as np
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtCore import Qt, QTimer
@@ -152,9 +153,27 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
         unique_id = uuid.uuid4().hex
         shapefile_path = os.path.join(temp_dir, f"mf_grid_{unique_id}.shp")
         
-        # Escritura Física
+        # Escritura Física - colapso por array vacio en Flopy
         try:
-            ml.modelgrid.write_shapefile(filename=shapefile_path)
+            # matriz estructurada de MODFLOW
+            nrow = ml.modelgrid.nrow
+            ncol = ml.modelgrid.ncol
+            
+            # matrices 2D con los índices correspondientes 
+            row_arr = np.repeat(np.arange(1, nrow + 1)[:, None], ncol, axis=1)
+            col_arr = np.repeat(np.arange(1, ncol + 1)[None, :], nrow, axis=0)
+            node_arr = np.arange(1, nrow * ncol + 1).reshape((nrow, ncol))
+            
+            # atributos requeridos por GeoLinkage
+            atributos_grilla = {
+                'row': row_arr,
+                'column': col_arr,
+                'node': node_arr
+            }
+            
+            # Escribir el Shapefile
+            ml.modelgrid.write_shapefile(filename=shapefile_path, array_dict=atributos_grilla)
+            
         except Exception as e:
             raise RuntimeError(f"Error de flopy al escribir el Shapefile: {e}")
 
