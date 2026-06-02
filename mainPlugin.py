@@ -1,15 +1,16 @@
 import os
 import tempfile
 import uuid
-import numpy as np
-from flopy.export.shapefile_utils import write_grid_shapefile
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.QtCore import Qt, QTimer
+from qgis.PyQt.QtCore import Qt, QTimer, QVariant
 from qgis.PyQt import uic
-from qgis.core import QgsMapLayerProxyModel, QgsProject, QgsVectorLayer, QgsMapLayerType, QgsWkbTypes
 from .GeoLinkage.AppKernel import AppKernel
-
+from qgis.core import (
+    QgsMapLayerProxyModel, QgsProject, QgsVectorLayer, QgsMapLayerType, QgsWkbTypes, 
+    QgsFields, QgsField, QgsFeature, QgsGeometry, QgsPointXY, QgsVectorFileWriter, 
+    QgsCoordinateReferenceSystem, QgsCoordinateTransformContext
+)
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'geo_linkage_dialog.ui'))
 
 class GeoLinkageDialog(QDialog, FORM_CLASS):
@@ -154,33 +155,64 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
         unique_id = uuid.uuid4().hex
         shapefile_path = os.path.join(temp_dir, f"mf_grid_{unique_id}.shp")
         
-        # Escritura Física - colapso por array vacio en Flopy
-        try:
+        # Escritura Física mediante PyQGIS (Evasión de dependencias)
+        try:            
             # matriz estructurada de MODFLOW
             nrow = ml.modelgrid.nrow
             ncol = ml.modelgrid.ncol
             
-            # matrices 2D con los índices correspondientes 
-            row_arr = np.repeat(np.arange(1, nrow + 1)[:, None], ncol, axis=1)
-            col_arr = np.repeat(np.arange(1, ncol + 1)[None, :], nrow, axis=0)
-            node_arr = np.arange(1, nrow * ncol + 1).reshape((nrow, ncol))
+            # estructura del Shapefile temporal
+            campos = QgsFields()
+            campos.append(QgsField("row", QVariant.Int))
+            campos.append(QgsField("column", QVariant.Int))
+            campos.append(QgsField("node", QVariant.Int))
             
-            # atributos requeridos por GeoLinkage
-            atributos_grilla = {
-                'row': row_arr,
-                'column': col_arr,
-                'node': node_arr
-            }
+            # Extraer proyección de MODFLOW (si existe), si no, usar sistema de coordenadas local
+            epsg = ml.modelgrid.epsg
+            crs = QgsCoordinateReferenceSystem(f"EPSG:{epsg}") if epsg else QgsCoordinateReferenceSystem()
             
-            # Escribir el Shapefile llamando a la funcion directamente
-            write_grid_shapefile(
-                filename=shapefile_path, 
-                mg=ml.modelgrid, 
-                array_dict=atributos_grilla
-            )
+            opciones = QgsVectorFileWriter.SaveVectorOptions()
+            opciones.driverName = "ESRI Shapefile"
+            opciones.fileEncoding = "UTF-8"
+            
+            # escritor nativo 
+            escritor = QgsVectorFileWriter.create(
+                shapefile_path,
+                campos,
+                QgsWkbTypes.Polygon,
+                crs,
+                QgsCoordinateTransformContext(),
+                opciones
+            )            
+            if escritor.hasError() != QgsVectorFileWriter.NoError:
+                raise RuntimeError(f"El motor de QGIS falló al crear el archivo: {escritor.errorMessage()}")
+                
+            # Extraer cada celda y escribirla en el disco
+            for i in range(nrow):
+                for j in range(ncol):
+                    node_id = i * ncol + j + 1
+                    
+                    # coordenadas de los 4 vértices de la celda
+                    vertices = ml.modelgrid.get_cell_vertices(i, j)
+                    
+                    # poligono de QGIS
+                    puntos = [QgsPointXY(v[0], v[1]) for v in vertices]
+                    geom = QgsGeometry.fromPolygonXY([puntos])
+                    
+                    # atributos
+                    feat = QgsFeature(campos)
+                    feat.setGeometry(geom)
+                    feat.setAttribute("row", i + 1)
+                    feat.setAttribute("column", j + 1)
+                    feat.setAttribute("node", int(node_id))
+                    
+                    escritor.addFeature(feat)
+                    
+            # limpiar la ram
+            del escritor 
             
         except Exception as e:
-            raise RuntimeError(f"Error de flopy al escribir el Shapefile: {e}")
+            raise RuntimeError(f"Fallo crítico al compilar la malla con PyQGIS: {e}")
 
         # Conversión a QgsVectorLayer y validación estricta
         grid_layer = QgsVectorLayer(shapefile_path, "Malla MODFLOW (Temporal)", "ogr")
