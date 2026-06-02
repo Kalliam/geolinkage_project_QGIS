@@ -51,7 +51,7 @@
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
-       <string>Capas Principales</string>
+       <string>Main Layers</string>
       </attribute>
       <layout class="QVBoxLayout" name="tab1_vlayout">
        <property name="leftMargin">
@@ -443,7 +443,7 @@
            <item>
             <widget class="QPushButton" name="btn_explore_ds">
              <property name="text">
-              <string>Select Ruta</string>
+              <string>Select Route</string>
              </property>
             </widget>
            </item>
@@ -543,7 +543,7 @@
            <item>
             <widget class="QPushButton" name="btn_explore_folder">
              <property name="text">
-              <string>Select Ruta</string>
+              <string>Select Route</string>
              </property>
             </widget>
            </item>
