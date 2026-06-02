@@ -2,6 +2,7 @@ import os
 import tempfile
 import uuid
 import numpy as np
+from flopy.export.shapefile_utils import write_grid_shapefile
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtCore import Qt, QTimer
@@ -171,8 +172,12 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
                 'node': node_arr
             }
             
-            # Escribir el Shapefile
-            ml.modelgrid.write_shapefile(filename=shapefile_path, array_dict=atributos_grilla)
+            # Escribir el Shapefile llamando a la funcion directamente
+            write_grid_shapefile(
+                filename=shapefile_path, 
+                mg=ml.modelgrid, 
+                array_dict=atributos_grilla
+            )
             
         except Exception as e:
             raise RuntimeError(f"Error de flopy al escribir el Shapefile: {e}")
