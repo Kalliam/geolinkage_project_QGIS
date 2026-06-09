@@ -1,7 +1,5 @@
 from abc import abstractmethod, ABCMeta
 import processing
-from qgis.core import QgsVectorLayer
-
 
 class FeatureProcess(metaclass=ABCMeta):
     """
@@ -169,41 +167,55 @@ class FeatureProcess(metaclass=ABCMeta):
         """
         Calcula la intersección espacial entre una capa vectorial (Cuencas, Ríos, etc.)
         y la capa de la Malla MODFLOW (grid_layer).
-        Devuelve una nueva capa vectorial temporal (en memoria) con el resultado.
+        Si los Sistemas de Coordenadas difieren, reproyecta la capa origen al vuelo en memoria RAM.
+        Devuelve una nueva capa vectorial temporal con el resultado.
         """
-
 
         # 1. Validación temprana
         if not source_layer.isValid() or not grid_layer.isValid():
             raise ValueError(f"Error: Una de las capas no es válida ({source_layer.name()} o {grid_layer.name()})")
 
-        # 2. Filtrado de geometrías sin nombre (Reemplaza a extract_map_with_condition)
-        # En QGIS, simplemente creamos una consulta SQL ligera
+        # 2. Filtrado de geometrías sin nombre
         source_layer.setSubsetString(f'"{col_name_source}" IS NOT NULL AND "{col_name_source}" != \'\'')
 
-        # 3. El Geoprocesamiento Nativo de QGIS (Reemplaza a v.overlay de GRASS)
-        # Usamos el algoritmo nativo 'native:intersection' que es altamente optimizado
-        params = {
-            'INPUT': source_layer,
-            'OVERLAY': grid_layer,
-            'INPUT_FIELDS': [], # Dejamos vacío para mantener todos los campos
-            'OVERLAY_FIELDS': [], 
-            'OVERLAY_FIELDS_PREFIX': '',
-            'OUTPUT': 'memory:' # Guardamos el resultado en la memoria RAM, no en el disco
-        }
-
         try:
-            # Ejecutamos el algoritmo
-            result = processing.run("native:intersection", params)
+            # 3. Evaluación y Reproyección al vuelo (On-the-fly)
+            crs_origen = source_layer.crs()
+            crs_destino = grid_layer.crs()
+            
+            # Por defecto, la capa a intersectar es la original
+            capa_a_intersectar = source_layer
+
+            if crs_origen != crs_destino:
+                # Los sistemas difieren. Creamos una capa temporal reproyectada en RAM.
+                reproject_params = {
+                    'INPUT': source_layer,
+                    'TARGET_CRS': crs_destino,
+                    'OUTPUT': 'memory:'
+                }
+                reproject_result = processing.run("native:reprojectlayer", reproject_params)
+                capa_a_intersectar = reproject_result['OUTPUT']
+
+            # 4. El Geoprocesamiento Nativo de QGIS (Intersección)
+            intersect_params = {
+                'INPUT': capa_a_intersectar,
+                'OVERLAY': grid_layer,
+                'INPUT_FIELDS': [],
+                'OVERLAY_FIELDS': [], 
+                'OVERLAY_FIELDS_PREFIX': '',
+                'OUTPUT': 'memory:'
+            }
+            
+            result = processing.run("native:intersection", intersect_params)
             intersected_layer = result['OUTPUT']
             
-            # Limpiamos el filtro SQL de la capa original para no afectarla
+            # 5. Limpieza del filtro original
             source_layer.setSubsetString('')
             
             return False, intersected_layer # (Error=False, Capa Resultante)
 
         except Exception as e:
-            # Restaurar el filtro por si acaso
+            # Restaurar el filtro por seguridad en caso de fallo
             source_layer.setSubsetString('')
             raise RuntimeError(f"Fallo crítico al intersectar {source_layer.name()} con {grid_layer.name()}. Detalle: {e}")
 

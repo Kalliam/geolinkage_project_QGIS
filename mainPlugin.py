@@ -140,15 +140,27 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
         except Exception as e:
             raise RuntimeError(f"Fallo al leer el modelo MODFLOW con flopy: {e}")
 
-        # Sistema de Coordenadas del proyecto QGIS, reemplaza al antiguo input manual de EPSG
+        # Sistema de Coordenadas del proyecto QGIS
         crs = QgsProject.instance().crs()
         if not crs.isValid():
             raise RuntimeError("El proyecto actual de QGIS no tiene un Sistema de Coordenadas definido. Asigne uno antes de procesar.")
         
+        # === BARRERA GEOGRÁFICA ESTRICTA ===
+        if crs.isGeographic():
+            raise ValueError(
+                f"Error Topológico: El proyecto QGIS está configurado en un sistema geográfico ({crs.authid()}). "
+                "MODFLOW requiere estrictamente un sistema proyectado (en metros o pies, ej. UTM). "
+                "Cambie el CRS del proyecto en la configuración de QGIS antes de compilar la malla."
+            )
+
         epsg_code = crs.postgisSrid()
 
-        # Configuración Espacial
-        ml.modelgrid.set_coord_info(xoff=x_ll, yoff=y_ll, angrot=z_rot, epsg=epsg_code, merge_coord_info=True)
+        # Configuración Espacial Segura
+        try:
+            ml.modelgrid.set_coord_info(xoff=x_ll, yoff=y_ll, angrot=z_rot, epsg=epsg_code, merge_coord_info=True)
+        except ValueError as e:
+            # Captura de contingencia si FloPy rechaza el EPSG por otros motivos matemáticos
+            raise ValueError(f"El motor espacial de FloPy rechazó las coordenadas ingresadas: {e}")
 
         # Generación de Nombre Único para evitar PermissionError (File Lock en Windows)
         temp_dir = tempfile.gettempdir()
