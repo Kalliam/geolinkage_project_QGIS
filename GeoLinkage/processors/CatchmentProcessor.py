@@ -112,7 +112,7 @@ class CatchmentProcess(FeatureProcess):
         _err_cat, intersected_layer = self.inter_map_with_linkage(catchment_layer, grid_layer, col_name)
 
         if _err_cat:
-            raise RuntimeError('[EXIT] ERROR AL INTERSECTAR CON [{}]'.format(catchment_layer))
+            raise RuntimeError('[EXIT] ERROR INTERSECTING WITH [{}]'.format(catchment_layer))
 
         # make a dictionary grid with cells information in intersection map
         

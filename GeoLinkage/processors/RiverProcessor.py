@@ -150,7 +150,7 @@ class RiverProcess(FeatureProcess):
         _err_r, inter_river_layer = self.inter_map_with_linkage(segmented_river_layer, grid_layer, 'river_name')
         
         if _err_r:
-            raise RuntimeError(f'[EXIT] ERROR AL INTERSECTAR RÍOS CON [{grid_layer.name()}]')
+            raise RuntimeError(f'[EXIT] ERROR INTERSECTING RIVERS WITH [{grid_layer.name()}]')
 
         # 3. Procesamiento Interno
         self.process_intersection(

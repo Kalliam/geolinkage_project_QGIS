@@ -112,7 +112,7 @@ class GroundwaterProcess(FeatureProcess):
         _err_gw, intersected_layer = self.inter_map_with_linkage(gw_layer, grid_layer, col_name)
 
         if _err_gw:
-            raise RuntimeError('[EXIT] ERROR AL INTERSECTAR CON [{}]'.format(gw_layer))
+            raise RuntimeError('[EXIT] ERROR INTERSECTING WITH [{}]'.format(gw_layer))
 
 
         te = time.time()

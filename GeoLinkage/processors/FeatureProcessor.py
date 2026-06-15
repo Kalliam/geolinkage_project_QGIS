@@ -173,7 +173,7 @@ class FeatureProcess(metaclass=ABCMeta):
 
         # 1. Validación temprana
         if not source_layer.isValid() or not grid_layer.isValid():
-            raise ValueError(f"Error: Una de las capas no es válida ({source_layer.name()} o {grid_layer.name()})")
+            raise ValueError(f"Error: One of the layers is invalid ({source_layer.name()} or {grid_layer.name()})")
 
         # 2. Filtrado de geometrías sin nombre
         source_layer.setSubsetString(f'"{col_name_source}" IS NOT NULL AND "{col_name_source}" != \'\'')
@@ -217,7 +217,7 @@ class FeatureProcess(metaclass=ABCMeta):
         except Exception as e:
             # Restaurar el filtro por seguridad en caso de fallo
             source_layer.setSubsetString('')
-            raise RuntimeError(f"Fallo crítico al intersectar {source_layer.name()} con {grid_layer.name()}. Detalle: {e}")
+            raise RuntimeError(f"Critical failure when intersecting {source_layer.name()} with {grid_layer.name()}. Detail: {e}")
 
 
     ##Returns 'cell' data. The 'main_data' parameter 

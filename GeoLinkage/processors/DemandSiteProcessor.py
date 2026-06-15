@@ -209,7 +209,7 @@ class DemandSiteProcess(FeatureProcess):
                         
         except Exception as e:
             # El error solo se lanza si el usuario proveyó una ruta pero el archivo es ilegible.
-            raise ValueError(f"Error de E/S en el archivo de pozos [{path_archivo_txt}]: {e}")
+            raise ValueError(f"I/O Error in wells file [{path_archivo_txt}]: {e}")
             
         return nombres_pozos
 
@@ -247,7 +247,7 @@ class DemandSiteProcess(FeatureProcess):
         #                                                       snap='1e-12')
         #     if _err_gw:
         #         # self.print_errors()
-        #         raise RuntimeError('[EXIT] ERROR AL INTERSECTAR CON [{}]'.format(linkage_name))
+        #         raise RuntimeError('[EXIT] ERROR INTERSECTING WITH [{}]'.format(linkage_name))
 
         #     # make a dictionary grid with cell information in intersection map
         #     self.make_grid_cell()
