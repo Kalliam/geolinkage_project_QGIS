@@ -13,6 +13,7 @@ Proyect still on development and tested just for structured grid models.
 ## Use restrictions
 
 - Not useful for unstructured grid subterranean models (e.g. MODFLOW USG).
+- Not supported for QGIS 3.x versions
 
 ## Installation (manual)
 
@@ -28,8 +29,8 @@ Proyect still on development and tested just for structured grid models.
    | **Windows** | `%APPDATA%\QGIS\QGIS4\profiles\default\python\plugins\` |
    | **Linux** | `~/.local/share/QGIS/QGIS4/profiles/default/python/plugins/` |
    | **macOS** | `~/Library/Application Support/QGIS/QGIS4/profiles/default/python/plugins/` |
-> [!NOTE]
-> For QGIS 3.x, replace `QGIS4` with `QGIS3` in the path.
+   > [!NOTE]
+   > If the "plugins" folder does not exist, create it.
 
 3. Open OSGeo4W Shell and install the required packages with:
    ```bash
