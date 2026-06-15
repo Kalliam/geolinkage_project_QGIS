@@ -29,7 +29,6 @@ Proyect still on development and tested just for structured grid models.
    | **Windows** | `%APPDATA%\QGIS\QGIS4\profiles\default\python\plugins\` |
    | **Linux** | `~/.local/share/QGIS/QGIS4/profiles/default/python/plugins/` |
    | **macOS** | `~/Library/Application Support/QGIS/QGIS4/profiles/default/python/plugins/` |
-   > [!NOTE]
    > If the "plugins" folder does not exist, create it.
 
 3. Open OSGeo4W Shell and install the required packages with:
