@@ -1,6 +1,8 @@
 import os
 import tempfile
 import uuid
+import sys
+import subprocess
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtCore import Qt, QTimer, QVariant
@@ -338,6 +340,14 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
                 QMessageBox.information(self, "Success", "GeoLinkage and Geochecker processing completed successfully.")
             else:
                 QMessageBox.information(self, "Success", "GeoLinkage processing completed successfully.")
+
+            #abre la carpeta de resultados
+            if sys.platform == 'win32':
+                os.startfile(ruta_salida)
+            elif sys.platform == 'darwin':
+                subprocess.Popen(['open', ruta_salida])
+            else:
+                subprocess.Popen(['xdg-open', ruta_salida])
 
         except Exception as e:
             import traceback
