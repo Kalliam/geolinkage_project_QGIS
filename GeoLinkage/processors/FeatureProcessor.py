@@ -1,5 +1,6 @@
 from abc import ABCMeta
 import processing
+from qgis.core import QgsMessageLog, Qgis
 
 class FeatureProcess(metaclass=ABCMeta):
     """
@@ -113,15 +114,15 @@ class FeatureProcess(metaclass=ABCMeta):
 
     #@main_task
     def inter_map_with_linkage(self, source_layer, grid_layer, col_name_source):
-        # 1.  validation
+        # Validation
         if not source_layer.isValid() or not grid_layer.isValid():
             raise ValueError(f"Error: One of the layers is invalid ({source_layer.name()} or {grid_layer.name()})")
 
-        # 2. Filtering nameless geometries
+        # Filtering nameless geometries
         source_layer.setSubsetString(f'"{col_name_source}" IS NOT NULL AND "{col_name_source}" != \'\'')
 
         try:
-            # 3. Evaluation and On-the-fly Reprojection
+            # Evaluation and On-the-fly Reprojection
             crs_origen = source_layer.crs()
             crs_destino = grid_layer.crs()
             
@@ -138,7 +139,7 @@ class FeatureProcess(metaclass=ABCMeta):
                 reproject_result = processing.run("native:reprojectlayer", reproject_params)
                 layer_to_intersect = reproject_result['OUTPUT']
 
-            # 4. QGIS Native Geoprocessing (Intersection)
+            # QGIS Native Geoprocessing (Intersection)
             intersect_params = {
                 'INPUT': layer_to_intersect,
                 'OVERLAY': grid_layer,
@@ -151,44 +152,32 @@ class FeatureProcess(metaclass=ABCMeta):
             result = processing.run("native:intersection", intersect_params)
             intersected_layer = result['OUTPUT']
             
-            # 5. Cleaning original filter
+            # Cleaning original filter
             source_layer.setSubsetString('')
             
-            return False, intersected_layer # (Error=False, Result Layer)
+            return False, intersected_layer
 
         except Exception as e:
-            # Restore filter for safety in case of failure
             source_layer.setSubsetString('')
             raise RuntimeError(f"Critical failure when intersecting {source_layer.name()} with {grid_layer.name()}. Detail: {e}")
 
 
-    # Returns 'cell' data. The 'main_data' parameter 
-    # has by default the value True, which refers to
-    # main map data. 
-    # formats the list into shapefile format
-    # cols_number = self.config.get_columns_to_save(feature_type=self.get_feature_type()), looks for COLUMNS_FOR_FEATURE in config
-
     def get_data_to_save(self, cell, map_name, main_data=True, is_demand_site=False, export_column_names=None):
-        
-        #main_map = self.get_main_map_name(only_name=True, imported=True)
         col_data = self.get_cell_data_by_map(map_name=map_name, cell=cell)
-        #col_names = self.get_column_to_export(alias=self.get_feature_type(), with_type=False)
         cols_number = len(export_column_names)
         data_dict = {}
         if col_data and len(col_data) > cols_number and is_demand_site == True:
-            # send error message to QGIS 
-            pass
+            msg = f"Data loss warning: Cell ({cell.row}, {cell.col}) intersects {len(col_data)} demand sites. This exceeds the maximum allowed export columns ({cols_number}). Only the first {cols_number} will be exported."
+            QgsMessageLog.logMessage(msg, "GeoLinkage", Qgis.Warning)
         
         values_to_save = min(cols_number, len(col_data)) if col_data else 0
 
+        # fill the data_dict with the data from the cell
         for i in range(cols_number):
             col_names = export_column_names[i]
-
             if i < values_to_save:
-            # Assign the winning geometry name
                 data_dict[col_names] = col_data[i]['name']
             else:
-                # Fill the "gaps" with empty strings to maintain DB integrity
                 data_dict[col_names] = ''
         return data_dict
 
