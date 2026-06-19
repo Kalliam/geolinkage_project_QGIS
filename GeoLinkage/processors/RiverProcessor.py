@@ -9,133 +9,68 @@ from ..utils.RiverNode import RiverNode
 
 class RiverProcess(FeatureProcess):
     """
-        It contains the DS processor particular logic.
+    Contains the river processor particular logic.
 
-        Process rivers generating a vector map from surface maps (node and arc maps).
-        Through the water injection or extraction nodes present in the surface maps, it determines the river segments o
-        identifying for one of these nodes, if the segment is the upper or lower one according to river flow.
-        This is required because for linking it is necessary to know where the water is drawn from.
+    Processes rivers using surface maps (nodes and arcs/rivers).
+    By leveraging the node layer, it rebuilds the river network tree to segment 
+    rivers exactly where specific nodes (e.g., withdrawals or inflows) interact with them.
+    These segments are then spatially intersected with the groundwater grid.
 
-        By default, 1 column is generated in final file metadata (shapefile with linking grid). In which it is stored
-        segment and the river following the form: [segment name],[river name].
+    The final output stores the segment and the river in the form: [river name],[segment name].
 
+    Attributes:
+    ----------
+    cells : Dict[namedtuple<Cell_river>, Dict[str, Dict[str, str|int|float]]]
+        Inherited from FeatureProcess class.
+        It is used to store cell-feature relationships. Indexed by grid cells that
+        have been intersected with the feature map. Because a cell can be intersected by more than one
+        map geometry, access is given by: 
+        [cell] -> [geo_intersected] -> [cell_feature_relationship_data].
+        The stored values are:
+            - 'length': line length representing the river segment within the cell.
+            - 'cell_id': cell ID. (ID in gw grid's vector map)
+            - 'segment_name': River segment name (e.g., node interaction break).
+            - 'river_name': river name.
+            - 'name': format: [river name],[segment name].
+            - 'map_name': origin map name.
 
-        Attributes:
-        ----------
-        cells : Dict[namedtuple<Cell>, Dict[str, Dict[str, str|int]]
-            Inherited from FeatureProcess class.
-            It is used to store cell-feature relationship. It is indexed by DS grid cells that
-            they have been intersected with the feature map. Because a cell can be intersected by more than one
-            map geometry, access is given by: [cell] -> [geo_intersected] -> [cell_feature_relationship_data].
-            The stored values are:
-                - 'length': arc length which represents the river subsegment within the cell.
-                - 'cell_id': cell ID. (ID in gw grid's vector map)
-                - 'segment_name': River segment name. (ex: before [node_in_river])
-                - 'river_name': river name in surface arc map.
-                - 'name': name used to make the link. Format: [river name],[segment name].
-                - 'map_name': map name. (name used by GRASS)
+    cell_ids: Dict[namedtuple<Cell_river>, Dict[str, str|int|List<data>]]
+        Inherited from FeatureProcess class.
+        Stores the geometry (s) that will actually be output in the final file.
 
-        cell_ids: Dict[namedtuple<Cell>, Dict[str, str|int|List<data>]]
-            Inherited from FeatureProcess class.
-            Store for each cell the geometry (s) that will actually be stored in final file. Structure and stored
-            values details are in FeatureProcess class.
-
-        rivers : Dict[int, Dict[str, str | int]]
-            It is used to store river information obtained from surface map analysis.
-            (Stored data details are in GeoKernel class).
-
-        _river_names : Dict[str, int]
-            It is used internally to directly access rivers data by name.
-
-        river_break_nodes : Dict[int, Dict[str, str | int | bool]]
-            Stores nodes that modify the river flow. Indexed by node ID.
-
-                Almacena los nodos que intervienen el flujo del rio. obtenidos del analisis de las geometrias del
-                mapa de nodos del esquema superficial. Indexado por el ID del nodo.
-
-        root : RiverNode
-            RiverNode instance that identifies access point to river segments, using the nodes of the surface map
-            that affect the river flow.
+    root : RiverNode
+        RiverNode instance acting as the root to identify river segments and nodes
+        that modify the river flow.
 
 
+    Methods:
+    -------
+    run(self, grid_layer, river_layer, node_layer, col_river_name, col_node_type, col_node_name, col_row, col_col, col_cat)
+        Starts processing by generating a segmented river layer dynamically in memory,
+        then intersecting it with the grid layer and recording statistics.
 
-        Methods:
-        -------
-        _start(self, linkage_name: str)
-            Runs procedure for successful processing between feature map and inital GW grid.
-            The 'linkage_name' parameter refers to GW grid vector map.
+    _make_river_tree_segments_structure(self, river_layer, node_layer, col_node_type, col_node_name, col_river_name)
+        Rebuilds the river tree structure by linking nodes to their closest rivers using QGIS
+        spatial indices, calculating line distances to identify flow breaks.
 
-        run(self, linkage_name: str)
-            Starts processing and records basic statistics of the execution.
-            The 'linkage_name' parameter refers to groundwater grid vector map.
+    make_segmented_river_layer(self, river_layer, node_layer, col_node_type, col_node_name, col_river_name)
+        Replaces older manual grass methods by generating a new memory layer where original 
+        river lines are mathematically split at the nodes' calculated distances.
 
-        set_data_from_geo(self)
-            Extracts rivers and nodes data from analyzed surface maps (arc and node).
+    get_river_segments_from_tree(self, feature_river, col_river_name)
+        Returns the ordered sub-segments for a particular river by querying the rebuilt RiverNode tree.
 
-        make_cell_data_by_main_map(self, map_name, inter_map_name, inter_map_geo_type)
-            Creates the structure that store necessary river and segments data of the main map.
-            A main map generates a mandatory column for segments in final file metadata (even if its values are null).
+    process_intersection(self, inter_layer, map_name, col_river, col_segment, col_row, col_col, col_cat)
+        Processes the intersection between the segmented rivers and the MODFLOW grid. Calculates the 
+        exact length of the river fragment inside the cell to prioritize segments.
 
-        make_cell_data_by_secondary_maps(self, map_name, inter_map_name, inter_map_geo_type)
-            Currently, this method is not used because there is only one main map for rivers.
-
-        _make_river_tree_segments_structure(self)
-            Create necessary structure to identify river segments through an RiverNode instance.
-            All nodes involved in the river flows are checked, identifying the anterior and posterior segment
-            each one of them.
-
-        _set_break_names_in_segments_map(self, segments_map_name='arc_segments')
-            Create segments vector map from rivers found in surface arc map. The parameters 'segments_map_name' is used
-            to give the name to the map, That map is intersected with GW grid vector map.
-
-
-
-        Example:
-        --------
-        >>> from processors.GeoKernel import GeoKernel
-        >>> from processors.RiverProcessor import RiverProcess
-        >>> from utils.Config import ConfigApp
-        >>> from utils.Errors import ErrorManager
-
-        >>> epsg_code, gisdb, location, mapset = 30719, '/tmp', 'test', 'PERMANENT'
-        >>> file_main_map, grid_vector_map = '/tmp/arc_map.shp', 'initial_gw_grid'
-
-        >>> config = ConfigApp(epsg_code=epsg_code, gisdb=gisdb, location=location, mapset=mapset)
-        >>> error = ErrorManager(config=config)
-        >>> geo = GeoKernel(config=config, err=error)
-
-        >>> processor = RiverProcess(geo=geo, config=config, err=error)
-        >>> processor.config.set_columns_to_save(processor.get_feature_type(), columns_to_save=1)
-        >>> processor.config.set_order_criteria(processor.get_feature_type(), order_criteria='length')
-        >>> processor.set_map_name(map_name='arc_vector_map', map_path=file_main_map, is_main_file=True)
-
-        >>> processor.import_maps()
-        >>> processor.check_names_with_geo()
-        >>> processor.check_names_between_maps()
-        >>> processor.make_segment_map(is_main_file=True)
-
-        >>> if not processor.check_errors():  # or processor.run(linkage_name=grid_vector_map)
-        >>>     processor.inter_map_with_linkage(linkage_name=grid_vector_map)
-        >>>     processor.make_grid_cell()
-
-        >>>     summary = processor.get_summary()
-
-        >>>     inputs = summary.print_input_params()  # inputs and stats
-        >>>     real_lines = summary.get_process_lines(with_ui=True)
-        >>>     errors = summary.print_errors()
-        >>>     warnings = summary.print_warnings()
-
-        >>>     print(inputs)
-
-        """
+    """
 
     def __init__(self, debug: bool = False):
         super().__init__(debug=debug)
         self.root = None
 
-    #@TimerSummary.timeit
     def run(self, grid_layer, river_layer, node_layer, col_river_name, col_node_type, col_node_name, col_row, col_col, col_cat):
-        # Utils.show_title(msg_title='RIVERS', title_color=ui.green)
         ts = time.time()
 
         segmented_river_layer = self.make_segmented_river_layer(
@@ -143,21 +78,18 @@ class RiverProcess(FeatureProcess):
             node_layer=node_layer,
             col_node_type=col_node_type,
             col_node_name=col_node_name,
-            col_river_name=col_river_name  # variable corregida
+            col_river_name=col_river_name
         )
 
-        # 2. Intersección con la Malla
         _err_r, inter_river_layer = self.inter_map_with_linkage(segmented_river_layer, grid_layer, 'river_name')
-        
         if _err_r:
             raise RuntimeError(f'[EXIT] ERROR INTERSECTING RIVERS WITH [{grid_layer.name()}]')
 
-        # 3. Procesamiento Interno
         self.process_intersection(
             inter_layer=inter_river_layer,
             map_name=river_layer.name(),
-            col_river='river_name', # Columna generada en el paso 1
-            col_segment='segment_break_name', # Columna generada en el paso 1
+            col_river='river_name', # col generated
+            col_segment='segment_break_name', # col generated
             col_row=col_row, 
             col_col=col_col, 
             col_cat=col_cat
@@ -166,8 +98,6 @@ class RiverProcess(FeatureProcess):
         self._set_cell_by_criteria(by_field='length')
 
         te = time.time()
-        # Set stats into summary
-        # # set cells
         self.stats['PROCESSED TIME'] = '{0:.2f} seg'.format(te - ts)
         self.stats['PROCESSED CELLS'] = len(self.cells)
 
@@ -177,154 +107,127 @@ class RiverProcess(FeatureProcess):
 
 
     def _make_river_tree_segments_structure(self, river_layer, node_layer, col_node_type, col_node_name, col_river_name):
-        """
-        Reconstruye el árbol de RiverNode leyendo directamente desde QGIS y calculando
-        las distancias de los nodos a lo largo de las líneas de los ríos.
-        """
-        # Limpiar la variable de clase compartida para evitar datos residuales entre ejecuciones
+        # avoid residual data between executions
         RiverNode.segments_list = {}
         self.root = RiverNode(node_id=-1, node_name='root', node_type=0, node_distance=0)
 
-        # 1. Crear un Índice Espacial de los Ríos para búsquedas ultra rápidas
-        indice_rios = QgsSpatialIndex(river_layer.getFeatures())
-        
-        # Diccionario auxiliar para acceder a los ríos por ID rápidamente
-        dict_rios = {f.id(): f for f in river_layer.getFeatures()}
+        # Spatial Index of Rivers and rivers by ID
+        rivers_index = QgsSpatialIndex(river_layer.getFeatures())
+        rivers_dict = {f.id(): f for f in river_layer.getFeatures()}
 
-        # 2. Recorremos los nodos (puntos) del esquema WEAP
-        for feature_nodo in node_layer.getFeatures():
-            tipo_nodo = feature_nodo[col_node_type]
+        # Nodes loop
+        for node_feature in node_layer.getFeatures():
+            node_type = node_feature[col_node_type]
             
-            # [WEAP LOGIC]: Ignoramos los Canales (Tipo 15 en WEAP)
-            if tipo_nodo == 15:
+            # Ignore infiltration links
+            if node_type == 15:
                 continue
 
-            geom_nodo = feature_nodo.geometry()
-            if not geom_nodo:
+            node_geom = node_feature.geometry()
+            if not node_geom:
                 continue
 
-            # --- BUSCAMOS LOS 2 RÍOS MÁS CERCANOS ---
-            # En lugar de pedir 1, pedimos 2 vecinos al índice espacial
-            ids_rios_cercanos = indice_rios.nearestNeighbor(geom_nodo.asPoint(), 2)
+            # Search for the 2 closest rivers
+            nearest_river_ids = rivers_index.nearestNeighbor(node_geom.asPoint(), 2)
             
-            if not ids_rios_cercanos:
+            if not nearest_river_ids:
                 continue
 
-            # El río principal siempre es el más cercano (índice 0)
-            id_rio_principal = ids_rios_cercanos[0]
-            feature_rio_principal = dict_rios[id_rio_principal]
-            geom_rio_principal = feature_rio_principal.geometry()
-            distancia_principal = geom_rio_principal.lineLocatePoint(geom_nodo)
+            # The main river is always the closest one (index 0)
+            main_river_id = nearest_river_ids[0]
+            main_river_feature = rivers_dict[main_river_id]
+            main_river_geom = main_river_feature.geometry()
+            main_distance = main_river_geom.lineLocatePoint(node_geom)
 
-            nodo_id = feature_nodo.id()
-            nodo_nombre = feature_nodo[col_node_name]
-            rio_nombre_principal = feature_rio_principal[col_river_name]
-            rio_cat_principal = feature_rio_principal.id() 
+            node_id = node_feature.id()
+            node_name = node_feature[col_node_name]
+            main_river_name = main_river_feature[col_river_name]
+            main_river_cat = main_river_feature.id() 
 
             river_node = RiverNode(
-                node_id=nodo_id, node_name=nodo_nombre, node_type=tipo_nodo,
-                node_distance=distancia_principal, root_node=self.root, parent=self.root
+                node_id=node_id, node_name=node_name, node_type=node_type,
+                node_distance=main_distance, root_node=self.root, parent=self.root
             )
-            punto_xy = geom_nodo.asPoint()
-            river_node.set_coords(punto_xy.x(), punto_xy.y())
+            xy_point = node_geom.asPoint()
+            river_node.set_coords(xy_point.x(), xy_point.y())
 
-            # Asignamos el principal
-            river_node.set_main_river(id_rio_principal, rio_nombre_principal, rio_cat_principal, distancia_principal)
+            river_node.set_main_river(main_river_id, main_river_name, main_river_cat, main_distance)
 
-            # --- LA RESTAURACIÓN DEL RÍO SECUNDARIO ---
-            # Si es un tributario (13) y encontramos un segundo río cerca (índice 1)
-            if tipo_nodo == 13 and len(ids_rios_cercanos) > 1:
-                id_rio_secundario = ids_rios_cercanos[1]
-                feature_rio_secundario = dict_rios[id_rio_secundario]
-                geom_rio_secundario = feature_rio_secundario.geometry()
+
+            # Secondary River
+            # If it is a tributary (13) and we find a second river nearby (index 1)
+            if node_type == 13 and len(nearest_river_ids) > 1:
+                secondary_river_id = nearest_river_ids[1]
+                secondary_river_feature = rivers_dict[secondary_river_id]
+                secondary_river_geom = secondary_river_feature.geometry()
+                secondary_distance = secondary_river_geom.lineLocatePoint(node_geom)
+                secondary_river_name = secondary_river_feature[col_river_name]
+                secondary_river_cat = secondary_river_feature.id()
                 
-                # Verificamos si realmente se conectan. Calculamos la distancia del nodo al segundo río
-                distancia_secundaria = geom_rio_secundario.lineLocatePoint(geom_nodo)
-                
-                # Extraemos el nombre para validar si es el "Inflow" correcto 
-                rio_nombre_secundario = feature_rio_secundario[col_river_name]
-                rio_cat_secundario = feature_rio_secundario.id()
-                
-                # Asignamos al nodo (Asumiendo que RiverNode aún tiene el método set_secondary_river)
+                # Assign to the node
                 river_node.set_secondary_river(
-                    id_rio_secundario, 
-                    rio_nombre_secundario, 
-                    rio_cat_secundario, 
-                    distancia_secundaria
+                    secondary_river_id, 
+                    secondary_river_name, 
+                    secondary_river_cat, 
+                    secondary_distance
                 )
 
         return self.root
 
     def make_segmented_river_layer(self, river_layer, node_layer, col_node_type, col_node_name, col_river_name):
-        """
-        Reemplaza a make_segment_map() y _set_break_names_in_segments_map().
-        Corta las líneas de los ríos en memoria basándose en el árbol de RiverNode.
-        """
-        # 1. Llamamos al "Cerebro" para armar el árbol y obtener las distancias lógicas
+        # Build tree and get the logical distances
         self.root = self._make_river_tree_segments_structure(
             river_layer, node_layer, col_node_type, col_node_name, col_river_name
         )
         
+        # If no nodes cutting the river, return the original layer
         if not self.root or not self.root.get_segments_list():
-            # Si no hay nodos que corten el río, devolvemos la capa original intacta
             return river_layer
 
-        # 2. Crear una nueva capa temporal en memoria (El lienzo en blanco)
-        crs = river_layer.crs().authid() # Copiamos el sistema de coordenadas
-        segmented_layer = QgsVectorLayer(f"LineString?crs={crs}", "Rios_Segmentados", "memory")
+        # New temporary layer in memory
+        crs = river_layer.crs().authid()
+        segmented_layer = QgsVectorLayer(f"LineString?crs={crs}", "Segmented_Rivers", "memory")
         provider = segmented_layer.dataProvider()
         
-        # Le creamos las columnas que necesitamos para el cruce final
+        # Create columns
         provider.addAttributes([
             QgsField("river_name", QVariant.String),
             QgsField("segment_break_name", QVariant.String)
         ])
         segmented_layer.updateFields()
 
-        # 3. La Matemática (Cortar las líneas)
-        new_features = []
-        
-        # Iteramos sobre los ríos originales
-        for feature_river in river_layer.getFeatures():
-            # (Aquí viene la lógica de conexión con RiverNode)
-            # Le preguntamos al árbol: "¿En cuántos pedazos se divide este río y a qué distancias?"
-            # Supongamos que el árbol nos dice: "Se divide en 2: de 0m a 400m, y de 400m a 1000m"
-            
+        # Cutting the lines
+        new_features = []        
+        for feature_river in river_layer.getFeatures():      
             river_segments = self.get_river_segments_from_tree(feature_river, col_river_name)
-            
             for segment in river_segments:
                 dist_start = segment['start_distance']
-                # Si end_distance es None (el último pedazo), calculamos la longitud total real
+                # If end_distance is None, calculate the real total length
                 if segment['end_distance'] is None:
                     dist_end = feature_river.geometry().length()
                 else:
                     dist_end = segment['end_distance']
                 
-                # LA MAGIA DE QGIS: Cortar la línea matemáticamente
-                # 1. Extraer el contenedor genérico
+                # Extract the generic container
                 geom_original = feature_river.geometry()
                 
-                # 2. Extracción defensiva de la primitiva: 
-                # Abordamos el caso de que la línea venga empaquetada como MultiLineString
+                # Extraction of the primitive:
                 if geom_original.isMultipart():
-                    # Extrae la primera (y presumiblemente única) curva del conjunto
-                    curva_base = geom_original.constGet().geometryN(0)
+                    base_curve = geom_original.constGet().geometryN(0)
                 else:
-                    curva_base = geom_original.constGet()
+                    base_curve = geom_original.constGet()
                 
-                # 3. Ejecutar el corte matemático sobre el objeto QgsCurve subyacente
-                curva_cortada = curva_base.curveSubstring(dist_start, dist_end)
-                
-                # 4. Re-empaquetar la nueva curva en un contenedor QgsGeometry válido
-                cut_geometry = QgsGeometry(curva_cortada)               
-                # Empaquetar el nuevo pedazo con su nombre
+                cut_curve = base_curve.curveSubstring(dist_start, dist_end)                
+                cut_geometry = QgsGeometry(cut_curve)               
+               
+                # Package the new piece with its name
                 new_feature = QgsFeature(segmented_layer.fields())
                 new_feature.setGeometry(cut_geometry)
                 new_feature.setAttributes([segment['river_name'], segment['segment_break_name']])
                 
                 new_features.append(new_feature)
 
-        # 4. Guardar los pedazos en la capa y devolverla
+        # Save the pieces in the layer and return it
         provider.addFeatures(new_features)
         segmented_layer.updateExtents()
 
@@ -333,53 +236,45 @@ class RiverProcess(FeatureProcess):
     def get_river_segments_from_tree(self, feature_river, col_river_name):
         all_nodes = self.root.get_segments_list()
         river_name = feature_river[col_river_name] 
+        river_nodes = [node for node in all_nodes if node['river_name'] == river_name]
+        river_nodes.sort(key=lambda x: x['distance'])
         
-        # 1. Filtrar los puntos de corte que pertenecen a este río
-        nodos_del_rio = [nodo for nodo in all_nodes if nodo['river_name'] == river_name]
+        final_segments = []
+        current_distance = 0.0
         
-        # 2. Ordenar los cortes aguas abajo (desde la cabecera hacia la desembocadura)
-        nodos_del_rio.sort(key=lambda x: x['distance'])
-        
-        segmentos_finales = []
-        distancia_actual = 0.0
-        
-        # 3. Construir los rangos de los sub-segmentos
-        for nodo in nodos_del_rio:
-            segmentos_finales.append({
+        # Build the ranges of the sub-segments
+        for node in river_nodes:
+            final_segments.append({
                 'river_name': river_name,
-                'segment_break_name': nodo['break_name'],
-                'start_distance': distancia_actual,
-                'end_distance': nodo['distance']
+                'segment_break_name': node['break_name'],
+                'start_distance': current_distance,
+                'end_distance': node['distance']
             })
-            # El fin de este segmento es el inicio del siguiente
-            distancia_actual = nodo['distance']
+            current_distance = node['distance']
             
-        # 4. Añadir el tramo de cierre (desde el último nodo hasta el final del río)
-        segmentos_finales.append({
+        # Add the closing stretch (from the last node to the end of the river)
+        final_segments.append({
             'river_name': river_name,
             'segment_break_name': f"{river_name}_Final", 
-            'start_distance': distancia_actual,
-            'end_distance': None # None le indica a curveSubstring que vaya hasta el extremo final
+            'start_distance': current_distance,
+            'end_distance': None # None tells curveSubstring to go to the final end
         })
         
-        return segmentos_finales
+        return final_segments
 
     # @main_task
-    ## procesa la interseccion del mapa de rios con la malla de MODFLOW
     def process_intersection(self, inter_layer, map_name, col_river, col_segment, col_row, col_col, col_cat):
         Cell = namedtuple('Cell_river', ['row', 'col'])
 
         for feature in inter_layer.getFeatures():
-            if not feature.hasGeometry():  # when topology has some errors
-                # print("[ERROR] ", a.cat, a.id)
+            if not feature.hasGeometry():
                 continue
             
             river_name = feature[col_river]
             segment_name = feature[col_segment]
             area_row, area_col = feature[col_row], feature[col_col]
             cell_id = feature[col_cat]                
-
-            line_length = feature.geometry().length() #porque es una linea (Arc)
+            line_length = feature.geometry().length() 
 
 
             data = {
