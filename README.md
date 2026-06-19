@@ -48,7 +48,7 @@ Proyect still on development and tested just for structured grid models.
 Before opening the plugin, make sure to:
 
 - Define the project CRS (*Project → Properties → CRS*).
-  > In case of MODFOW use by flopy, define it on UTM format (with WGS84 datum).
+  > In case of MODFOW use by flopy, define it on UTM format.
 - Load your shapefile files in the QGIS layers panel.
 
 ### 2. Open the plugin
