@@ -4,8 +4,7 @@
 name=GeoLinkage
 email=me@example.com
 author=Just Me
-qgisMinimumVersion=3.0
-qgisMaximumVersion=4.99
+qgisMinimumVersion=4.0
 description=GeoLinkage is a tool for creating a linkage file meant to work as an intermediate layer in the integration of surface and subterranean models. The resulting linkage file can be used for integrating models for platforms such as WEAP-MODFLOW, for which GeoLinkage is specifically constructed.
 about=Plugin GeoLinkage.
 version=1
