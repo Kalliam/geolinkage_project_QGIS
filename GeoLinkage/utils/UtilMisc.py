@@ -12,32 +12,39 @@ class UtilMisc:
         gw_name: str,
         ds_prefix: str,
     ):
-        """_summary_
+        """
+        Parses vector layers and builds dictionary structures representing cells, arcs, and nodes 
+        from the WEAP Model and MODFLOW Linkage map.
 
         Parameters
         ----------
         linkage_map : str
-            Name assigned to the map created when Linkage file was imported to the mapset.
+            Path to the Linkage vector map.
         arc_map : str
-            Name assigned to the map created when the WEAP Arc file was imported to the mapset.
+            Path to the WEAP Arc vector map.
         node_map : str
-            Name assigned to the map created when the WEAP Arc file was imported to the mapset.
+            Path to the WEAP Node vector map.
+        catch_name : str
+            Column name representing the catchment.
+        gw_name : str
+            Column name representing the groundwater region.
+        ds_prefix : str
+            Prefix used to identify columns for demand sites.
 
         Returns
         -------
-
-        dict
+        cells : dict
             Dict representing the cells of the linkage file. Has the following structure:
             {Cell ID :
                 {
-                    'catchment': catchment name,
-                    'groundwater': groundwater name,
+                    'catchment': list with catchment name,
+                    'groundwater': list with groundwater name,
                     'demand_site': list of demand site names,
                     'cell_area': float of the area
                 }
             }
-        dict
-            Dict representing the cells Arcs of the WEAP Model. Has the following structure:
+        arcs : dict
+            Dict representing the Arcs of the WEAP Model. Has the following structure:
             {Arc ID :
                 {
                     'type_id': geometry type ID of the arc,
@@ -45,27 +52,27 @@ class UtilMisc:
                     'dst_id': destination node ID (or None)
                 }
             }
-        dict
+        nodes : dict
             Dict representing the Nodes of the WEAP Model. Has the following structure:
             {Node ID :
                 {
                     'type_id': geometry type ID,
                     'name': node name,
-                    'cat': node internal ID (used by 'pygrass library')
+                    'cat': node internal feature ID
                 }
             }
         """
         
         # ---------------------------------------------------------
-        # Malla
+        # Grid
         # ---------------------------------------------------------
         cells = dict()
-        linkage_layer = QgsVectorLayer(linkage_map, "linkage", "ogr") #QgsVectorLayer reemplaza a VectorTopo
+        linkage_layer = QgsVectorLayer(linkage_map, "linkage", "ogr")
 
-        for feature in linkage_layer.getFeatures(): #viter("areas") por getFeatures()
-            #feature ~ cell
-            cat = feature.id()  #cell.cat
-            catch_raw = feature[catch_name]  #cell.attrs
+        for feature in linkage_layer.getFeatures():
+            # feature ~ cell
+            cat = feature.id()
+            catch_raw = feature[catch_name]
             gw_raw = feature[gw_name]
             area = feature.geometry().area()
 
@@ -73,7 +80,7 @@ class UtilMisc:
             gw = str(gw_raw).strip() if gw_raw != NULL and gw_raw else None
 
 
-            field_names = feature.fields().names() #cell.attrs.keys() no es accesible, los nombres de las columnas se sacan con fields()
+            field_names = feature.fields().names()
             demand_attrs = [
                 attr for attr in field_names if attr.startswith(ds_prefix)
             ]
@@ -81,13 +88,13 @@ class UtilMisc:
             demand_sites = []
             for attr in demand_attrs:
                 val = feature[attr]
-                # Limpiamos también los sitios de demanda
+                # We also clean the demand sites
                 if val != NULL and val:
                     demand_sites.append(str(val).strip())
-            demand_sites = list(set(demand_sites)) # quitamos duplicados
+            demand_sites = list(set(demand_sites)) # remove duplicates
        
 
-            #sin cambios
+            # no changes
             if None in demand_sites:
                 demand_sites.remove(None)
 
@@ -99,15 +106,14 @@ class UtilMisc:
             }
 
         # ---------------------------------------------------------
-        # Lineas
+        # Lines (Arcs)
         # ---------------------------------------------------------
-        #sin cambios mas alla de feature -> cell
         arcs = dict()
         arc_layer = QgsVectorLayer(arc_map, "arcs", "ogr")
 
         for feature in arc_layer.getFeatures():
             obj_id = feature["ObjID"]
-            type_id = int(feature["TypeID"]) #fuerzo a int por la linea de type_id = node["type_id"] en superposition_check.py
+            type_id = int(feature["TypeID"]) # forced to int due to superposition_check.py
             src_id = feature["SrcObjID"]
             dst_id = feature["DestObjID"]
             arcs[obj_id] = {
@@ -117,9 +123,8 @@ class UtilMisc:
             }
             
         # ---------------------------------------------------------
-        # Puntos
+        # Points (Nodes)
         # ---------------------------------------------------------
-        # sin cambios mas alla de feature -> node y cat = feature.id() en vez de node.cat
         nodes = dict()
         node_layer = QgsVectorLayer(node_map, "nodes", "ogr")
 
@@ -133,7 +138,7 @@ class UtilMisc:
             name_raw = feature["name2"]
             name = str(name_raw).strip() if name_raw != NULL else ""
    
-            cat = feature.id()  #node.cat -> feature.id()
+            cat = feature.id()
             nodes[obj_id] = {
                 "type_id": type_id,
                 "name": name,

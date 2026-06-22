@@ -125,8 +125,8 @@ class GeoChecker:
             self.set_result_path(folder_path)
 
     def set_result_path(self, path):
-        self.folder_path = path
-        self.visualizer.set_result_path(path)
+        self.folder_path = str(path)
+        self.visualizer.set_result_path(str(path))
         
     def set_arcs_and_nodes(self, arcs, nodes):
         self.arcs = arcs

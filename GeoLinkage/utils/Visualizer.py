@@ -6,12 +6,16 @@ import seaborn as sns
 import pandas as pd
 
 class Visualizer:
+    """
+    Utility class responsible for visualizing and exporting matrices and text files.
+    Allows for plotting heatmaps and exporting data to CSV or text files.
+    """
     def __init__(self):
         self.result_path = None
 
     def set_result_path(self, result_path: str):
-        self.result_path = result_path
-
+        self.result_path = str(result_path)
+        
     def write_matrix_img(self, matrix, name, **kwargs):
         if not self.result_path:
             raise ValueError('Result path is not set. Please set the result path')
@@ -112,8 +116,6 @@ class Visualizer:
                 for text in texts:
                     file.write(text + '\n')
     
-    # dict_list is a list of dicts where the "key" is the name of a columns and the "value" is the value for that row
-    # meaning every dict represents a row in the dataframe
     def write_csv_file(self, name, dict_list):
         df = pd.DataFrame(dict_list)
         if not df.empty:
