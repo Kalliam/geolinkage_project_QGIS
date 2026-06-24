@@ -90,10 +90,10 @@ class DemandSiteProcess(FeatureProcess):
                     continue
 
             area_row, area_col, cell_area_id = feature[col_row], feature[col_col], feature[col_cat]
-            feature_area, criteria = (0, None) if is_well else (feature.geometry().area(), "area")
+            feature_area = 0 if is_well else feature.geometry().area()
 
             data = {'area': feature_area, 'cell_id': cell_area_id, 'name': feature_name, 'map_name': map_name}
-            self._set_cell(Cell(area_row, area_col), feature_name, data, by_field=criteria)
+            self._set_cell(Cell(area_row, area_col), feature_name, data, by_field="area")
             
 
 

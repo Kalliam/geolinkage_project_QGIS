@@ -305,12 +305,14 @@ class AppKernel():
         # EXPORTACION AL DISCO 
         
         # Construir la ruta final del archivo
-        archivo_salida = os.path.join(output_path, "linkage_final.shp")
+        # Reemplazamos los slashes para evitar errores de parseo en OGR
+        archivo_salida = os.path.join(output_path, "linkage_final.shp").replace("\\", "/")
         
         # Configurar motor de escritura vectorial de QGIS 3
         opciones = QgsVectorFileWriter.SaveVectorOptions()
         opciones.driverName = "ESRI Shapefile"
         opciones.fileEncoding = "UTF-8"
+        opciones.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
         
         # Ejecutar la clonación al disco (Captura segura de la tupla)
         resultado_escritura = QgsVectorFileWriter.writeAsVectorFormatV3(
@@ -325,7 +327,7 @@ class AppKernel():
         mensaje = resultado_escritura[1]
         
         if codigo_error != QgsVectorFileWriter.NoError:
-            raise IOError(f"Error crítico en la capa I/O. No se pudo guardar el archivo final en la ruta de salida: {mensaje}")
+            raise IOError(f"Critical I/O error. Could not save the final file to the output path: {mensaje}")
         # =================================================
 
         ## no implementado aun
