@@ -355,12 +355,18 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
             
             kernel = AppKernel(debug=True)
             
+            # Set wait cursor
+            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+            
             kernel.run(
                 grid_layer=resolved_mesh_layer, 
                 layers_dict=data_payload,
                 output_path=output_path,
                 run_geochecker=run_geochecker
             )
+
+            # reset cursor
+            QApplication.restoreOverrideCursor()
             
             if run_geochecker:
                 QMessageBox.information(self, "Success", "GeoLinkage and Geochecker processing completed successfully.")
