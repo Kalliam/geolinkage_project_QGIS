@@ -195,14 +195,6 @@ class AppKernel():
 
 
     def run(self, grid_layer, layers_dict, output_path, run_geochecker: bool = False):
-        ts = time.time()
-        t_start = time.perf_counter()
-        # 1. Start background monitor
-        monitor = MonitorRAMOS()
-        monitor_thread = threading.Thread(target=monitor.track)
-        monitor_thread.start()
-
-        t_start = time.perf_counter()
         # -------------------------------------------------------------------------------
         # Catchments Logic
         # -------------------------------------------------------------------------------
@@ -270,36 +262,7 @@ class AppKernel():
 
         # GEOCHECKER        
         if run_geochecker:
-            monitor2 = MonitorRAMOS()
-            monitor_thread2 = threading.Thread(target=monitor2.track)
-            monitor_thread2.start()
-
-            t_start_geochecker = time.perf_counter()
             self.output_path = output_path
-            self.run_geo_checker(output_path, layers_dict)
-            t_end_geochecker = time.perf_counter()
-            elapsed_time_geochecker = t_end_geochecker - t_start_geochecker
-            peak_mb_geochecker = monitor2.peak_bytes / (1024 * 1024)
-            monitor2.active = False
-            monitor_thread2.join()
-
-            print(f"[Profiling] GeoChecker executed in: {elapsed_time_geochecker:.4f} seconds | Peak RAM: {peak_mb_geochecker:.2f} MB")
-            
-        t_end = time.perf_counter()
-            
-        monitor.active = False
-        monitor_thread.join()
-
-        total_time = t_end - t_start
-        peak_mb = monitor.peak_bytes / (1024 * 1024)
-
-        print(f"[Profiling OS] Time: {total_time:.4f} sec | Peak RAM: {peak_mb:.2f} MB")
-        te = time.time()
-        self.stats['TOTAL_TIME'] = f"{te - ts:.2f} sec"
-        print(f"DEBUG OUTPUT: {self.stats['TOTAL_TIME']}")
-
-        t_end = time.perf_counter()
-        elapsed_time = t_end - t_start
-        print(f"[Profiling] Processor executed in: {elapsed_time:.4f} seconds")
+            self.run_geo_checker(output_path, layers_dict)            
 
         self.visualizer.set_result_path(output_path)
