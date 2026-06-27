@@ -113,10 +113,10 @@ class SuperpositionCheck(Check):
         self.connections[base_info["name"]][secondary_info["name"]] = 0
 
     def check_connection(self, base_name, secondary_name):
-        if self.connections.get(base_name):
+        if base_name in self.connections:
             return secondary_name in self.connections[base_name]
-
-        # Solo llega aquí si no existe el elemento base en WEAP.
+        
+        # Solo llega aquí si no existe el elemento base en WEAP. 
         return True
 
     def make_error_dict_for_df(self):
@@ -341,5 +341,7 @@ class SuperpositionCheck(Check):
                 if not self.check_connection(base_name, secondary_name):
                     self.add_error(base_name, secondary_name, area=cell_area)
                 else:
-                    if self.connections.get(base_name):
+                    if base_name in self.connections:
+                        if secondary_name not in self.connections[base_name]:
+                            self.connections[base_name][secondary_name] = 0
                         self.connections[base_name][secondary_name] += cell_area

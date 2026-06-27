@@ -160,7 +160,10 @@ class GeoChecker:
         
         
     def init_cells_loop(self):
-        for cell_id, cell in self.cells.items():
+        from qgis.PyQt.QtCore import QCoreApplication
+        for i, (cell_id, cell) in enumerate(self.cells.items()):
+            if i % 1000 == 0:
+                QCoreApplication.processEvents()
             for check in self.checks:
                 check.cell_init_operation(cell_id, cell)
 
@@ -176,7 +179,10 @@ class GeoChecker:
                 check.arc_check_operation(arc_id, arc)
         
     def check_cells_loop(self):
-        for cell_id, cell in self.cells.items():
+        from qgis.PyQt.QtCore import QCoreApplication
+        for i, (cell_id, cell) in enumerate(self.cells.items()):
+            if i % 1000 == 0:
+                QCoreApplication.processEvents()
             for check in self.checks:
                 check.cell_check_operation(cell_id, cell)
 

@@ -22,7 +22,15 @@ class Visualizer:
         
         if matrix is None:
             return
-     # Manage kwargs
+            
+        if matrix.shape[0] > 150 or matrix.shape[1] > 150:
+            self.write_text_file(
+                name + "_TOO_LARGE",
+                text=f"The matrix is too large to plot ({matrix.shape[0]}x{matrix.shape[1]}). Please check the CSV files instead."
+            )
+            return
+
+        # Manage kwargs
         row_labels = kwargs.get('row_labels')
         column_labels = kwargs.get('column_labels')
         cbar = kwargs.get('cbar', False)
