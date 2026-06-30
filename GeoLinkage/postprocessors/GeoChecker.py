@@ -10,13 +10,7 @@ class GeoChecker:
 
     checks : list
         List of checks to be performed, this checks are instances of the Check class.
-    
-    config : ConfigApp
-        Configuration object for the GeoChecker postprocessor.
-    
-    img_path : str
-        Path to the directory where the visualizations and data of the checks will be saved.
-    
+
     arcs : dict
         Dictionary containing the arcs data.
         {Arc ID :
@@ -26,18 +20,18 @@ class GeoChecker:
                 'dst_id': destination node ID (or None)
             }
         }
-    
+
     nodes : dict
         Dictionary containing the nodes data with the following structure.
-        {Node ID : 
-            {   
-                'type_id': geometry type ID, 
-                'name': node name, 
-                'x': x-axis position of the node, 
-                'y': y-axis position of the node, 
+        {Node ID :
+            {
+                'type_id': geometry type ID,
+                'name': node name,
+                'x': x-axis position of the node,
+                'y': y-axis position of the node,
                 'cat': node internal ID (used by 'pygrass library')
             }
-        }    
+        }
     cells : dict
         Dictionary containing the consolidated cells data.
         {Cell ID :
@@ -45,43 +39,27 @@ class GeoChecker:
                 'catchment': {number_of_data : int, cell_id : int, row : int, col : int, data : [{area : float, cell_id : int, name : str, map_name : str}]},
                 'groundwater': {number_of_data : int, cell_id : int, row : int, col : int, data : [{area : float, cell_id : int, name : str, map_name : str}]},
                 'river': {number_of_data : int, cell_id : int, row : int, col : int, data : [{area : float, cell_id : int, name : str, map_name : str}]},
-                'demand_site': {number_of_data : int, cell_id : int, row : int, col : int, data : [{area : float, cell_id : int, name : str, map_name : str}]},
-                'cell_area': float
+                'demand_site': {number_of_data : int, cell_id : int, row : int, col : int, data : [{area : float, cell_id : int, name : str, map_name : str}]}
             }
         }
 
-    error : ErrorManager
-        Error manager object to manage the errors and warning obtained during the checks.
-    
-    summary : SummaryInfo
-        Summary object to store the summary of the checks.
-    
     visualizer : visualizer
         visualizer object to manage the visualization of the checks.
-    
+
     Methods:
     --------
     set_arcs_and_nodes(arcs, nodes):
         Set the arcs and nodes data to be used in the checks.
-    
+
     set_consolidate_cells(cells):
         Set the consolidated cells data to be used in the checks.
-    
-    get_summary():
-        Return the summary of the checks.
-    
-    print_checks():
-        Return a string with the checks names and descriptions.
-    
-    checking_errors():
-        Loop through the checks and append the errors to the error manager.
 
     setup(consolidate_cells, arcs, nodes):
         Set the consolidated cells, arcs and nodes data to be used in the checks.
 
     init_nodes_loop():
         Do a first loop through the nodes data and initialize the checks for the nodes.
-    
+
     init_arcs_loop():
         Do a first loop through the arcs data and initialize the checks for the arcs.
 
@@ -93,16 +71,16 @@ class GeoChecker:
 
     check_arcs_loop():
         Loop through the arcs data and perform the checks for the arcs.
-    
+
     check_cells_loop():
         Loop through the cells data and perform the checks for the cells.
-    
+
     build_checks():
         Run the initial loop through the data.
 
     perform_checks():
         Runs the final loop through the data to perform the checks.
-    
+
     plot_checks():
         Loop through the checks and run the plot method for each one.
 
@@ -135,15 +113,6 @@ class GeoChecker:
     def set_consolidate_cells(self, cells):
         self.cells = cells
 
-    def get_summary(self):
-        return self.summary
-    
-    def checking_errors(self):
-        for check in self.checks:
-            if check.get_errors():
-                msg = f"Chequeo con nombre '{check.get_name()}' ha encontrado errores, revise el directorio {self.folder_path} para más información."
-                self.error.append(msg= msg, typ= 'geo_check', is_warn= True)
-        
     def setup(self, consolidate_cells, arcs, nodes):
         self.set_consolidate_cells(consolidate_cells)
         self.set_arcs_and_nodes(arcs, nodes)
@@ -205,12 +174,4 @@ class GeoChecker:
         self.build_checks()
         # Checking secuence
         self.perform_checks()
-        # Return errors.
-        self.checking_errors()
-        # Here somebody should ask for the summary
         self.plot_checks()
-
-
-
-        
-

@@ -55,9 +55,6 @@ class Check(ABC):
     
     get_cell_feature_data(cell, feature_type)
         Method to get the data of a feature from a cell structure.
-    
-    get_cell_feature_names(cell, feature_type)
-        Method to get the names of a feature from a cell structure.
 
     """
     def __init__(self):
@@ -73,17 +70,7 @@ class Check(ABC):
         if None in data:
             data.remove(None)
         return data if data != [None] else []  # mmm
-
-    
-    # This one incurs in a mistake when dealing with demand_sites, it only gives you the first demand site name.
-    def get_cell_feature_names(self, cell, feature_type):
-        names = []
-        feature = cell.get(feature_type)
-        if feature:
-            for f in feature["data"]:
-                names.append(f["name"])
-        return names
-
+        
     # Abstract methods
 
     @abstractmethod
@@ -130,4 +117,3 @@ class Check(ABC):
 
     def get_description(self):
         return self.description
-    

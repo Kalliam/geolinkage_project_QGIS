@@ -1,4 +1,3 @@
-import random
 from qgis.core import QgsVectorLayer, NULL
 from qgis.PyQt.QtCore import QCoreApplication
 
@@ -76,7 +75,7 @@ class UtilMisc:
         for i, feature in enumerate(linkage_layer.getFeatures()):
             if i % 1000 == 0:
                 QCoreApplication.processEvents()
-            # feature ~ cell
+
             cat = feature.id()
             catch_raw = feature[catch_name]
             gw_raw = feature[gw_name]
@@ -94,7 +93,6 @@ class UtilMisc:
             demand_sites = list(set(demand_sites)) # remove duplicates
        
 
-            # no changes
             if None in demand_sites:
                 demand_sites.remove(None)
 
@@ -131,8 +129,6 @@ class UtilMisc:
 
         for feature in node_layer.getFeatures():
             obj_id = feature["ObjID"]
-            # type_id = feature["TypeID"]
-            # name = feature["name2"]
             type_id_raw = feature["TypeID"]
             type_id = int(type_id_raw) if type_id_raw != NULL else 0
             
