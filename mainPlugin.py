@@ -7,6 +7,8 @@ from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from qgis.PyQt.QtCore import Qt, QTimer, QVariant
 from qgis.PyQt import uic
+from qgis.utils import iface
+from qgis.core import Qgis
 from .GeoLinkage.AppKernel import AppKernel
 from qgis.core import (
     QgsMapLayerProxyModel, QgsProject, QgsVectorLayer, QgsMapLayerType, QgsWkbTypes, 
@@ -355,18 +357,28 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
             
             kernel = AppKernel(debug=True)
             
+            # Message Bar with infinite progress
+            progress_msg = iface.messageBar().createMessage("GeoLinkage", "Running plugin, please wait...")
+            progress_bar = QProgressBar()
+            progress_bar.setRange(0, 0)
+            progress_msg.layout().addWidget(progress_bar)
+            iface.messageBar().pushWidget(progress_msg, Qgis.MessageLevel.Info)
+            
             # Set wait cursor
             QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+            QApplication.processEvents()
             
-            kernel.run(
-                grid_layer=resolved_mesh_layer, 
-                layers_dict=data_payload,
-                output_path=output_path,
-                run_geochecker=run_geochecker
-            )
-
-            # reset cursor
-            QApplication.restoreOverrideCursor()
+            try:
+                kernel.run(
+                    grid_layer=resolved_mesh_layer, 
+                    layers_dict=data_payload,
+                    output_path=output_path,
+                    run_geochecker=run_geochecker
+                )
+            finally:
+                # reset cursor and clean message bar
+                QApplication.restoreOverrideCursor()
+                iface.messageBar().clearWidgets()
             
             if run_geochecker:
                 QMessageBox.information(self, "Success", "GeoLinkage and Geochecker processing completed successfully.")
