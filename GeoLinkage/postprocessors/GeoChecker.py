@@ -1,4 +1,6 @@
 from ..utils.Visualizer import Visualizer
+from qgis.PyQt.QtCore import QCoreApplication
+
 
 class GeoChecker:
     """
@@ -105,31 +107,33 @@ class GeoChecker:
     def set_result_path(self, path):
         self.folder_path = str(path)
         self.visualizer.set_result_path(str(path))
-        
+
     def set_arcs_and_nodes(self, arcs, nodes):
         self.arcs = arcs
         self.nodes = nodes
-    
+
     def set_consolidate_cells(self, cells):
         self.cells = cells
 
     def setup(self, consolidate_cells, arcs, nodes):
         self.set_consolidate_cells(consolidate_cells)
         self.set_arcs_and_nodes(arcs, nodes)
-        
+
     def init_nodes_loop(self):
-        for node_id, node in self.nodes.items():
+        for i, (node_id, node) in enumerate(self.nodes.items()):
+            if i % 1000 == 0:
+                QCoreApplication.processEvents()
             for check in self.checks:
-                check.node_init_operation(node_id ,node)
-        
+                check.node_init_operation(node_id, node)
+
     def init_arcs_loop(self):
-        for arc_id , arc in self.arcs.items():
+        for i, (arc_id, arc) in enumerate(self.arcs.items()):
+            if i % 1000 == 0:
+                QCoreApplication.processEvents()
             for check in self.checks:
                 check.arc_init_operation(arc_id, arc)
-        
-        
+
     def init_cells_loop(self):
-        from qgis.PyQt.QtCore import QCoreApplication
         for i, (cell_id, cell) in enumerate(self.cells.items()):
             if i % 1000 == 0:
                 QCoreApplication.processEvents()
@@ -137,18 +141,20 @@ class GeoChecker:
                 check.cell_init_operation(cell_id, cell)
 
     def check_nodes_loop(self):
-        for node_id, node in self.nodes.items():
+        for i, (node_id, node) in enumerate(self.nodes.items()):
+            if i % 1000 == 0:
+                QCoreApplication.processEvents()
             for check in self.checks:
                 check.node_check_operation(node_id, node)
-        
 
     def check_arcs_loop(self):
-        for arc_id, arc in self.arcs.items():
+        for i, (arc_id, arc) in enumerate(self.arcs.items()):
+            if i % 1000 == 0:
+                QCoreApplication.processEvents()
             for check in self.checks:
                 check.arc_check_operation(arc_id, arc)
-        
+
     def check_cells_loop(self):
-        from qgis.PyQt.QtCore import QCoreApplication
         for i, (cell_id, cell) in enumerate(self.cells.items()):
             if i % 1000 == 0:
                 QCoreApplication.processEvents()
@@ -168,7 +174,7 @@ class GeoChecker:
     def plot_checks(self):
         for check in self.checks:
             check.plot(self.visualizer)
-        
+
     def run(self):
         # Initializing secuence
         self.build_checks()
