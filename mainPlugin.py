@@ -65,11 +65,30 @@ class GeoLinkageDialog(QDialog, FORM_CLASS):
         super(GeoLinkageDialog, self).__init__(parent)
         self.setupUi(self)
 
+        self._setup_images()
         self._setup_layer_filters()
         self._connect_signals()
         self._populate_ds_list() 
         QTimer.singleShot(200, self._sync_initial_layers)
         self.toggle_grid_inputs()
+
+    def _setup_images(self):
+        base_dir = os.path.dirname(__file__)
+        images_info = [
+            (self.linkage_icon, 'img/logo_linkage_light.png', 400, 81),
+            (self.ceaza_icon, 'img/Ceaza-icon.png', 100, 100),
+            (self.dcc_icon, 'img/dcc_icon.png', 100, 100),
+            (self.usm_icon, 'img/usm_icon.png', 100, 100),
+        ]
+        
+        for label, rel_path, max_w, max_h in images_info:
+            full_path = os.path.join(base_dir, rel_path)
+            if os.path.exists(full_path):
+                pixmap = QPixmap(full_path)
+                if not pixmap.isNull():
+                    scaled_pixmap = pixmap.scaled(max_w, max_h, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                    label.setPixmap(scaled_pixmap)
+                    label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def _setup_layer_filters(self):
         self.cmb_layer_malla.setFilters(QgsMapLayerProxyModel.PolygonLayer)

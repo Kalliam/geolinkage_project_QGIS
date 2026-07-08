@@ -1,5 +1,5 @@
 # GeoLinkage — QGIS Plugin
-![description](logo.png)
+![description](img/logo_linkage_dark.png)
 
 GeoLinkage is a plugin for **QGIS (4.x)** that automates the creation of linkage files for integrated **WEAP-MODFLOW** models.
 
