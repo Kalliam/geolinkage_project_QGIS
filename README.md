@@ -9,7 +9,7 @@ It also receives the WEAP arcs and nodes in Shapefile format, and checks the con
 
 The newest update added a GeoChecker module, meant to check restrictions over the resulting Linkage file, currently checks if a superposition in one or more cells of Groundwater-Catchment and Groundwater-DemandSite is corresponded by a link in the WEAP model.
 
-This repository is a QGIS migration of the original plugins for GRASS  [GeoLinkage](https://github.com/ftucl/geolinkage) and [GeoChecker](https://github.com/AntoñnioTorga/GeoChecker).
+This repository is a QGIS migration of the original plugins for GRASS  [GeoLinkage](https://github.com/ftucl/geolinkage) and [GeoChecker](https://github.com/AntonioTorga/GeoChecker).
 
 > [!TIP]
 > If you only need the GeoChecker module to identify errors in linkage files, a standalone QGIS plugin is available [here](https://github.com/Kalliam/GeoCheckerQGIS).
